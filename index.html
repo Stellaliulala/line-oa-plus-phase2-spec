@@ -720,8 +720,10 @@ a { color: #1a73e8; }
 
 
 /* ── Spec 01 table th color fix ── */
-#panel-01 thead th { color: #fff !important; }
-#panel-01 .table-wrap thead th { color: #fff !important; }
+#panel-01 thead th { color: #fff !important; background: #3d6b3d !important; }
+#panel-01 .table-wrap thead th { color: #fff !important; background: #3d6b3d !important; }
+#panel-01 table thead tr { background: #3d6b3d !important; }
+#panel-01 table thead tr th { color: #fff !important; }
 
 /* ── Spec 01 Invoice styles (scoped) ── */
 
@@ -1157,6 +1159,281 @@ a { color: #1a73e8; }
 #panel-01 #content { padding: 24px 20px; }
   }
 >
+
+/* ── Spec 01 Registration Prototype styles ── */
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .reg-proto-wrap {
+    font-family: -apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #f4f4f8;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 0 48px;
+  }
+
+  .reg-card {
+    background: #fff;
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 24px rgba(0,0,0,.07);
+  }
+
+  /* ── Header ── */
+  .reg-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 24px 24px;
+    gap: 6px;
+    text-align: center;
+  }
+  .reg-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .reg-logo-icon {
+    width: 44px; height: 44px;
+    background: #1a1a1a;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .reg-logo-icon svg { width: 22px; height: 22px; }
+  .reg-brand-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -.3px;
+    color: #1a1a1a;
+  }
+  .reg-subtitle {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  /* ── Tab ── */
+  .reg-tab-bar {
+    border-bottom: 1px solid #e8e8e8;
+    text-align: center;
+    padding: 0 24px;
+  }
+  .reg-tab-label {
+    display: inline-block;
+    padding: 10px 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #3a7bd5;
+    border-bottom: 2px solid #3a7bd5;
+  }
+
+  /* ── Form Body ── */
+  .reg-form-body {
+    flex: 1;
+    padding: 28px 24px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Section Title ── */
+  .reg-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 14px;
+    margin-top: 4px;
+  }
+
+  /* ── Field ── */
+  .reg-field {
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .reg-field > label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .reg-field > label .req {
+    color: #e04040;
+    margin-left: 2px;
+  }
+  .reg-input {
+    width: 100%;
+    height: 44px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    outline: none;
+    transition: border-color .18s;
+    -webkit-appearance: none;
+    display: block;
+  }
+  .reg-input::placeholder { color: #bbb; }
+  .reg-input:focus { border-color: #3a7bd5; }
+  .reg-input.reg-error { border-color: #e04040; }
+
+  /* ── Error msg ── */
+  .reg-err-msg {
+    font-size: 11.5px;
+    color: #e04040;
+    margin-top: 4px;
+    display: none;
+  }
+  .reg-err-msg.visible { display: block; }
+
+  /* ── Divider between sections ── */
+  .reg-divider {
+    height: 1px;
+    background: #ebebeb;
+    margin: 8px 0 22px;
+  }
+
+  /* ── Invoice section — divider only, no background ── */
+  .reg-invoice-section {
+    margin-bottom: 20px;
+  }
+  .reg-invoice-section .reg-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #555;
+    margin-bottom: 16px;
+  }
+  .reg-invoice-section .reg-section-title svg {
+    width: 14px; height: 14px; flex-shrink: 0;
+    stroke: #555;
+  }
+
+  /* ── Radio toggle group (抬頭 / 載具) ── */
+  .reg-radio-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .reg-radio-btn {
+    flex: 1;
+    height: 44px;
+    border: 1.5px solid #d8d8d8;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #555;
+    background: #fff;
+    transition: border-color .18s, background .18s, color .18s;
+    user-select: none;
+  }
+  .reg-radio-btn.active {
+    border-color: #3a7bd5;
+    background: #eaf1fb;
+    color: #3a7bd5;
+    font-weight: 600;
+  }
+  .reg-radio-btn input { display: none; }
+
+  /* ── Carrier sub-toggle ── */
+  .reg-carrier-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .reg-carrier-btn {
+    flex: 1;
+    height: 44px;
+    border: 1.5px solid #d8d8d8;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #555;
+    background: #fff;
+    transition: border-color .18s, background .18s, color .18s;
+    user-select: none;
+  }
+  .reg-carrier-btn.active {
+    border-color: #3a7bd5;
+    background: #eaf1fb;
+    color: #3a7bd5;
+    font-weight: 600;
+  }
+  .reg-carrier-btn input { display: none; }
+
+  /* ── Hidden ── */
+  .reg-hidden { display: none !important; }
+
+  /* ── Submit ── */
+  .reg-submit-btn {
+    width: 100%;
+    height: 50px;
+    background: #3a7bd5;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    cursor: pointer;
+    transition: background .18s, transform .1s;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .reg-submit-btn:active { transform: scale(.98); }
+  .reg-submit-btn:hover { background: #2d66c3; }
+
+  /* ── Toast ── */
+  .reg-toast {
+    position: fixed;
+    top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #3a7bd5;
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 18px rgba(58,123,213,.35);
+    transition: transform .32s cubic-bezier(.34,1.56,.64,1);
+    z-index: 9999;
+    white-space: nowrap;
+  }
+  .reg-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Duplicate badge ── */
+  .reg-dup-badge {
+    display: none;
+    font-size: 11.5px;
+    color: #e04040;
+    margin-top: 4px;
+  }
+  .reg-dup-badge.visible { display: block; }
+
+  /* ── Hint ── */
+  .reg-hint {
+    font-size: 11px;
+    color: #999;
+    margin-top: 3px;
+  }
+
 </style>
 </head>
 <body>
@@ -1187,6 +1464,7 @@ a { color: #1a73e8; }
       <a href="#s01-s6-proto">6.6 Prototype 填寫頁</a>
       <a href="#s01-s6-mgmt">6.7 Prototype 管理頁</a>
       <a href="#s01-s6b">6.8 註冊頁發票專區</a>
+      <a href="#s01-s6b-proto">6.8.3 Prototype</a>
       <a href="#s01-s7">7. Webhook 接收規格</a>
       <a href="#s01-s8">8. Open API 查詢</a>
       <a href="#s01-s9">9. Webhook 回應規範</a>
@@ -1337,7 +1615,7 @@ a { color: #1a73e8; }
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>付款事件</th><th>觸發來源</th><th>開票行為</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">付款事件</th><th style="color:#fff;padding:10px 14px;font-weight:600;">觸發來源</th><th style="color:#fff;padding:10px 14px;font-weight:600;">開票行為</th></tr></thead>
           <tbody>
             <tr><td>首次訂閱付款</td><td>使用者完成訂閱 Checkout</td><td>觸發第一次開票流程</td></tr>
             <tr><td>每月自動續扣</td><td>OA Plus 平台自動執行</td><td>每月同一天觸發一次開票流程</td></tr>
@@ -1353,7 +1631,7 @@ a { color: #1a73e8; }
       <hr class="section-divider">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>範疇</th><th>負責方</th><th>說明</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">範疇</th><th style="color:#fff;padding:10px 14px;font-weight:600;">負責方</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
           <tbody>
             <tr><td>發票開立</td><td>12CM</td><td>由 12CM 系統產生與發送發票</td></tr>
             <tr><td>發票資訊收集</td><td>12CM</td><td>使用者在 12CM 系統填寫抬頭、統編等資訊</td></tr>
@@ -1374,7 +1652,7 @@ a { color: #1a73e8; }
       <p>使用者選擇個人抬頭時適用。</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>欄位</th><th>必填</th><th>格式 / 說明</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">格式 / 說明</th></tr></thead>
           <tbody>
             <tr><td>抬頭類型</td><td><span class="badge-y">Y</span></td><td>固定為「個人」</td></tr>
             <tr><td>電子信箱</td><td><span class="badge-y">Y</span></td><td>發票寄送用，需通過 email 格式驗證</td></tr>
@@ -1389,7 +1667,7 @@ a { color: #1a73e8; }
       <p>使用者選擇公司抬頭時適用，同時停用載具設定。</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>欄位</th><th>必填</th><th>格式 / 說明</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">格式 / 說明</th></tr></thead>
           <tbody>
             <tr><td>抬頭類型</td><td><span class="badge-y">Y</span></td><td>固定為「公司」</td></tr>
             <tr><td>買受人名稱（公司抬頭）</td><td><span class="badge-y">Y</span></td><td>公司全名，對應發票「買受人」欄位，不可為空</td></tr>
@@ -1483,7 +1761,7 @@ a { color: #1a73e8; }
       <div class="note-internal">⚠ 以下為建議資料結構，需由工程師依實際系統設計調整。</div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>欄位</th><th>類型</th><th>說明</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">類型</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
           <tbody>
             <tr><td><code>id</code></td><td>string</td><td>待開票紀錄唯一 ID</td></tr>
             <tr><td><code>merchantId</code></td><td>string</td><td>商戶識別碼</td></tr>
@@ -1506,7 +1784,7 @@ a { color: #1a73e8; }
       <h3 id="s01-s6-1">6.1 表單欄位與驗證規則</h3>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>欄位</th><th>必填</th><th>驗證規則</th><th>錯誤提示文案</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">驗證規則</th><th style="color:#fff;padding:10px 14px;font-weight:600;">錯誤提示文案</th></tr></thead>
           <tbody>
             <tr><td>抬頭類型</td><td><span class="badge-y">Y</span></td><td>單選（個人 / 公司）</td><td>—</td></tr>
             <tr><td>買受人名稱（公司抬頭）</td><td><span class="badge-cond">公司必填</span></td><td>非空字串</td><td>請輸入公司抬頭</td></tr>
@@ -1814,7 +2092,7 @@ a { color: #1a73e8; }
       <h3 style="font-size:14px;margin:0 0 10px;">發票開立狀況列表（路徑二 — 發票管理頁）</h3>
       <div class="table-wrap" style="margin-bottom:24px;">
         <table>
-          <thead><tr><th>欄位</th><th>說明</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
           <tbody>
             <tr><td>付款日期</td><td>對應的 OA Plus 付款完成時間（<code>paidAt</code>）</td></tr>
             <tr><td>付款金額</td><td>該筆訂閱付款金額</td></tr>
@@ -1831,7 +2109,7 @@ a { color: #1a73e8; }
       <h3 style="font-size:14px;margin:20px 0 10px;">欄位定義</h3>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>欄位名稱</th><th>資料來源</th><th>必填</th><th>顯示規則</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位名稱</th><th style="color:#fff;padding:10px 14px;font-weight:600;">資料來源</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">顯示規則</th></tr></thead>
           <tbody>
             <tr><td>付款日期</td><td><code>invoice_pending.paidAt</code></td><td><span class="badge-y">Y</span></td><td>格式：<code>YYYY-MM-DD</code>，依付款時間降冪排列</td></tr>
             <tr><td>付款金額</td><td><code>invoice_pending.amount</code></td><td><span class="badge-y">Y</span></td><td>格式：<code>NT$XXX</code></td></tr>
@@ -1846,7 +2124,7 @@ a { color: #1a73e8; }
       <h3 style="font-size:14px;margin:20px 0 10px;">發票狀態定義</h3>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>狀態值</th><th>顯示文字</th><th>顯示樣式</th><th>說明</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">狀態值</th><th style="color:#fff;padding:10px 14px;font-weight:600;">顯示文字</th><th style="color:#fff;padding:10px 14px;font-weight:600;">顯示樣式</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
           <tbody>
             <tr><td><code>PENDING</code></td><td>待補填</td><td>黃底深橘字</td><td>發票資料尚未填寫，等待使用者補填後觸發開票</td></tr>
             <tr><td><code>ISSUED</code></td><td>已開立</td><td>綠底深綠字</td><td>發票已成功開立，發票號碼與開立日期同步顯示</td></tr>
@@ -2336,6 +2614,149 @@ function mgmtSave() {
   }, 1200);
 }
 </script>
+<script>
+// ── Spec 01 Registration Prototype JS ──
+
+  var regCurrentType    = 'personal';
+  var regCurrentCarrier = 'email';
+
+  function regSyncEmail() {
+    var src  = document.getElementById('reg-contact-email').value;
+    var dest = document.getElementById('reg-inv-email');
+    dest.value = src;
+  }
+
+  function regSyncCompanyName() {
+    if (regCurrentType === 'company') {
+      var src  = document.getElementById('reg-company-name').value;
+      var dest = document.getElementById('reg-buyer-name');
+      if (!dest._manuallyEdited) dest.value = src;
+    }
+  }
+
+  (function() {
+    var bn = document.getElementById('reg-buyer-name');
+    if (bn) bn.addEventListener('input', function() { bn._manuallyEdited = true; });
+  })();
+
+  function regSwitchType(type) {
+    regCurrentType = type;
+    var pBlock = document.getElementById('reg-personal-block');
+    var cBlock = document.getElementById('reg-company-block');
+    var pBtn   = document.getElementById('reg-type-personal-btn');
+    var cBtn   = document.getElementById('reg-type-company-btn');
+    if (type === 'personal') {
+      pBlock.classList.remove('reg-hidden');
+      cBlock.classList.add('reg-hidden');
+      pBtn.classList.add('active'); cBtn.classList.remove('active');
+    } else {
+      pBlock.classList.add('reg-hidden');
+      cBlock.classList.remove('reg-hidden');
+      cBtn.classList.add('active'); pBtn.classList.remove('active');
+      var comp = document.getElementById('reg-company-name').value;
+      var bn   = document.getElementById('reg-buyer-name');
+      if (comp && !bn._manuallyEdited) bn.value = comp;
+    }
+    regClearAllErrors();
+  }
+
+  function regSwitchCarrier(carrier) {
+    regCurrentCarrier = carrier;
+    var bf   = document.getElementById('reg-barcode-field');
+    var eBtn = document.getElementById('reg-carrier-email-btn');
+    var bBtn = document.getElementById('reg-carrier-barcode-btn');
+    if (carrier === 'barcode') {
+      bf.classList.remove('reg-hidden');
+      bBtn.classList.add('active'); eBtn.classList.remove('active');
+    } else {
+      bf.classList.add('reg-hidden');
+      eBtn.classList.add('active'); bBtn.classList.remove('active');
+      regClearError('reg-barcode', 'reg-barcode-err');
+    }
+  }
+
+  function regCheckDuplicate() {
+    var val = document.getElementById('reg-brand-code').value.trim();
+    var dup = document.getElementById('reg-brand-code-dup');
+    var inp = document.getElementById('reg-brand-code');
+    if (!val) return;
+    var isDup = /1$|test$/i.test(val);
+    if (isDup) { dup.classList.add('visible'); inp.classList.add('reg-error'); }
+    else       { dup.classList.remove('visible'); inp.classList.remove('reg-error'); }
+  }
+
+  function regShowError(fieldId, errId, msg) {
+    var el  = document.getElementById(fieldId);
+    var err = document.getElementById(errId);
+    if (el)  el.classList.add('reg-error');
+    if (err) { if (msg) err.textContent = msg; err.classList.add('visible'); }
+  }
+  function regClearError(fieldId, errId) {
+    var el  = document.getElementById(fieldId);
+    var err = document.getElementById(errId);
+    if (el)  el.classList.remove('reg-error');
+    if (err) err.classList.remove('visible');
+  }
+  function regClearAllErrors() {
+    document.querySelectorAll('.reg-error').forEach(function(el){ el.classList.remove('reg-error'); });
+    document.querySelectorAll('.reg-err-msg.visible').forEach(function(el){ el.classList.remove('visible'); });
+    document.querySelectorAll('.reg-dup-badge.visible').forEach(function(el){ el.classList.remove('visible'); });
+  }
+
+  var regEmailRe   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var regBarcodeRe = /^\/[A-Z0-9]{7}$/;
+  var regTaxIdRe   = /^\d{8}$/;
+
+  function regSubmit() {
+    var ok = true;
+    regClearAllErrors();
+
+    if (!document.getElementById('reg-brand-name').value.trim())
+      { regShowError('reg-brand-name','reg-brand-name-err'); ok=false; }
+    if (!document.getElementById('reg-brand-code').value.trim())
+      { regShowError('reg-brand-code','reg-brand-code-err'); ok=false; }
+    if (!document.getElementById('reg-company-name').value.trim())
+      { regShowError('reg-company-name','reg-company-name-err'); ok=false; }
+    if (!document.getElementById('reg-contact-name').value.trim())
+      { regShowError('reg-contact-name','reg-contact-name-err'); ok=false; }
+
+    var ce = document.getElementById('reg-contact-email').value.trim();
+    if (!ce || !regEmailRe.test(ce))
+      { regShowError('reg-contact-email','reg-contact-email-err'); ok=false; }
+
+    var ie = document.getElementById('reg-inv-email').value.trim();
+    if (!ie || !regEmailRe.test(ie))
+      { regShowError('reg-inv-email','reg-inv-email-err'); ok=false; }
+
+    if (regCurrentType === 'personal') {
+      if (regCurrentCarrier === 'barcode') {
+        var bc = document.getElementById('reg-barcode').value.trim();
+        if (!bc || !regBarcodeRe.test(bc))
+          { regShowError('reg-barcode','reg-barcode-err','格式應為 /XXXXXXX'); ok=false; }
+      }
+    } else {
+      if (!document.getElementById('reg-buyer-name').value.trim())
+        { regShowError('reg-buyer-name','reg-buyer-name-err'); ok=false; }
+      var tid = document.getElementById('reg-tax-id').value.trim();
+      if (!tid || !regTaxIdRe.test(tid))
+        { regShowError('reg-tax-id','reg-tax-id-err'); ok=false; }
+      if (!document.getElementById('reg-buyer-addr').value.trim())
+        { regShowError('reg-buyer-addr','reg-buyer-addr-err'); ok=false; }
+      if (!document.getElementById('reg-buyer-phone').value.trim())
+        { regShowError('reg-buyer-phone','reg-buyer-phone-err'); ok=false; }
+    }
+
+    if (!ok) {
+      var fe = document.querySelector('.reg-error');
+      if (fe) fe.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    var toast = document.getElementById('reg-toast');
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 3000);
+  }
+
+</script>
 <!-- END MGMT PROTO -->
 
         </div>
@@ -2362,7 +2783,7 @@ function mgmtSave() {
 }</pre>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>欄位</th><th>類型</th><th>必填</th><th>說明</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">類型</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
           <tbody>
             <tr><td><code>eventType</code></td><td>string</td><td><span class="badge-y">Y</span></td><td>固定為 <code>PAYMENT_SUCCEEDED</code></td></tr>
             <tr><td><code>eventId</code></td><td>string</td><td><span class="badge-y">Y</span></td><td>此事件唯一識別碼</td></tr>
@@ -2417,7 +2838,7 @@ if (!MessageDigest.isEqual(expectedSig.getBytes(), receivedSig.getBytes())) {
       <h3>開票失敗處理</h3>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>情境</th><th>處理方式</th><th>使用者介面</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">情境</th><th style="color:#fff;padding:10px 14px;font-weight:600;">處理方式</th><th style="color:#fff;padding:10px 14px;font-weight:600;">使用者介面</th></tr></thead>
           <tbody>
             <tr>
               <td>開票 API 失敗</td>
@@ -2436,6 +2857,7 @@ if (!MessageDigest.isEqual(expectedSig.getBytes(), receivedSig.getBytes())) {
     </section>
 
     <!-- S6b 註冊頁發票專區 -->
+    <style>#panel-01 #s01-s6b thead th, #panel-01 #s01-s6b table thead tr th { color: #fff !important; background: #3d6b3d !important; }</style>
     <section id="s01-s6b">
       <h2><span class="section-num">6.8</span> 商戶註冊頁 — 發票專區</h2>
       <hr class="section-divider">
@@ -2453,7 +2875,7 @@ if (!MessageDigest.isEqual(expectedSig.getBytes(), receivedSig.getBytes())) {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>欄位</th><th>必填</th><th>驗證規則</th><th>備註</th></tr>
+            <tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">驗證規則</th><th style="color:#fff;padding:10px 14px;font-weight:600;">備註</th></tr>
           </thead>
           <tbody>
             <tr>
@@ -2562,7 +2984,172 @@ if (!MessageDigest.isEqual(expectedSig.getBytes(), receivedSig.getBytes())) {
         </table>
       </div>
 
-      <h3>6.8.3 UI 互動邏輯</h3>
+      <h3 id="s01-s6b-proto">6.8.3 互動 Prototype</h3>
+      <!-- ============================================================
+     Section 6.8 商戶註冊頁 — 發票資料 互動 Prototype
+     ID 前綴：reg-
+     JS 函式前綴：reg
+     ============================================================ -->
+
+
+
+<div class="reg-proto-wrap">
+  <div class="reg-card">
+
+    <!-- Header -->
+    <div class="reg-header">
+      <div class="reg-logo-row">
+        <div class="reg-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 12l3 3 5-5"/>
+          </svg>
+        </div>
+        <span class="reg-brand-title">Echoss VIP</span>
+      </div>
+      <div class="reg-subtitle">Echoss VIP x LINE OA Plus</div>
+    </div>
+
+    <!-- Tab -->
+    <div class="reg-tab-bar">
+      <span class="reg-tab-label">品牌註冊</span>
+    </div>
+
+    <!-- Form -->
+    <div class="reg-form-body">
+
+      <!-- 基本資料 -->
+      <div class="reg-section-title">基本資料</div>
+
+      <div class="reg-field">
+        <label>品牌名稱 <span class="req">*</span></label>
+        <input id="reg-brand-name" class="reg-input" type="text" placeholder="品牌名稱">
+        <div class="reg-err-msg" id="reg-brand-name-err">請輸入品牌名稱</div>
+      </div>
+
+      <div class="reg-field">
+        <label>品牌代號 <span class="req">*</span></label>
+        <input id="reg-brand-code" class="reg-input" type="text" placeholder="品牌代號（英數符號）" onblur="regCheckDuplicate()">
+        <div class="reg-dup-badge" id="reg-brand-code-dup">代號已存在，請重新輸入</div>
+        <div class="reg-err-msg" id="reg-brand-code-err">請輸入品牌代號</div>
+      </div>
+
+      <div class="reg-field">
+        <label>公司名稱 <span class="req">*</span></label>
+        <input id="reg-company-name" class="reg-input" type="text" placeholder="公司名稱" oninput="regSyncCompanyName()">
+        <div class="reg-err-msg" id="reg-company-name-err">請輸入公司名稱</div>
+      </div>
+
+      <div class="reg-divider"></div>
+      <div class="reg-section-title">聯絡資料</div>
+
+      <div class="reg-field">
+        <label>聯絡人姓名 <span class="req">*</span></label>
+        <input id="reg-contact-name" class="reg-input" type="text" placeholder="聯絡人">
+        <div class="reg-err-msg" id="reg-contact-name-err">請輸入聯絡人姓名</div>
+      </div>
+
+      <div class="reg-field">
+        <label>聯絡電話</label>
+        <input id="reg-contact-phone" class="reg-input" type="tel" placeholder="聯絡電話（選填）">
+      </div>
+
+      <div class="reg-field">
+        <label>聯絡人 Email <span class="req">*</span></label>
+        <input id="reg-contact-email" class="reg-input" type="email" placeholder="聯絡信箱" oninput="regSyncEmail()">
+        <div class="reg-err-msg" id="reg-contact-email-err">請輸入有效的電子信箱</div>
+      </div>
+
+      <!-- 發票資料 — 分隔線區隔，無底色 -->
+      <div class="reg-divider"></div>
+      <div class="reg-invoice-section">
+        <div class="reg-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="8" y1="13" x2="16" y2="13"/>
+            <line x1="8" y1="17" x2="12" y2="17"/>
+          </svg>
+          發票資料
+        </div>
+
+        <!-- 抬頭類型 -->
+        <div class="reg-field">
+          <label>抬頭類型 <span class="req">*</span></label>
+          <div class="reg-radio-group">
+            <label class="reg-radio-btn active" id="reg-type-personal-btn" onclick="regSwitchType('personal')">
+              <input type="radio" name="reg-inv-type" value="personal" checked> 個人
+            </label>
+            <label class="reg-radio-btn" id="reg-type-company-btn" onclick="regSwitchType('company')">
+              <input type="radio" name="reg-inv-type" value="company"> 公司
+            </label>
+          </div>
+        </div>
+
+        <!-- 個人區塊 -->
+        <div id="reg-personal-block">
+          <div class="reg-field">
+            <label>載具類型 <span class="req">*</span></label>
+            <div class="reg-carrier-group">
+              <label class="reg-carrier-btn active" id="reg-carrier-email-btn" onclick="regSwitchCarrier('email')">
+                <input type="radio" name="reg-carrier" value="email" checked> Email 寄送
+              </label>
+              <label class="reg-carrier-btn" id="reg-carrier-barcode-btn" onclick="regSwitchCarrier('barcode')">
+                <input type="radio" name="reg-carrier" value="barcode"> 手機條碼
+              </label>
+            </div>
+          </div>
+
+          <div class="reg-field reg-hidden" id="reg-barcode-field">
+            <label>手機條碼 <span class="req">*</span></label>
+            <input id="reg-barcode" class="reg-input" type="text" placeholder="/XXXXXXX">
+            <div class="reg-hint">格式：/ 開頭 + 7 碼英數大寫，例如 /ABC1234</div>
+            <div class="reg-err-msg" id="reg-barcode-err">格式應為 /XXXXXXX</div>
+          </div>
+        </div>
+
+        <!-- 公司區塊 -->
+        <div id="reg-company-block" class="reg-hidden">
+          <div class="reg-field">
+            <label>買受人名稱 <span class="req">*</span></label>
+            <input id="reg-buyer-name" class="reg-input" type="text" placeholder="買受人名稱（公司全名）">
+            <div class="reg-err-msg" id="reg-buyer-name-err">請輸入買受人名稱</div>
+          </div>
+          <div class="reg-field">
+            <label>統一編號 <span class="req">*</span></label>
+            <input id="reg-tax-id" class="reg-input" type="text" placeholder="8 位數字" maxlength="8">
+            <div class="reg-err-msg" id="reg-tax-id-err">請輸入正確的 8 位統一編號</div>
+          </div>
+          <div class="reg-field">
+            <label>買受人地址 <span class="req">*</span></label>
+            <input id="reg-buyer-addr" class="reg-input" type="text" placeholder="公司登記地址">
+            <div class="reg-err-msg" id="reg-buyer-addr-err">請輸入買受人地址</div>
+          </div>
+          <div class="reg-field">
+            <label>買受人電話 <span class="req">*</span></label>
+            <input id="reg-buyer-phone" class="reg-input" type="tel" placeholder="公司電話">
+            <div class="reg-err-msg" id="reg-buyer-phone-err">請輸入買受人電話</div>
+          </div>
+        </div>
+
+        <!-- 發票寄送 Email（共用） -->
+        <div class="reg-field">
+          <label>發票寄送 Email <span class="req">*</span></label>
+          <input id="reg-inv-email" class="reg-input" type="email" placeholder="發票寄送信箱">
+          <div class="reg-hint">預設帶入聯絡人 Email，可自行修改</div>
+          <div class="reg-err-msg" id="reg-inv-email-err">請輸入有效的電子信箱</div>
+        </div>
+      </div>
+
+      <button class="reg-submit-btn" onclick="regSubmit()">註 冊</button>
+
+    </div>
+  </div>
+</div>
+
+<div class="reg-toast" id="reg-toast">✓ 註冊成功，資料已儲存</div>
+
+      <h3>6.8.4 UI 互動邏輯</h3>
       <ul class="spec-list">
         <li>抬頭類型切換為「個人」：顯示載具類型、手機條碼（條件顯示）、發票寄送 Email；隱藏公司發票欄位</li>
         <li>抬頭類型切換為「公司」：顯示買受人名稱、統一編號、買受人地址、買受人電話、發票寄送 Email；隱藏載具設定；買受人名稱預設帶入公司名稱</li>
@@ -2587,7 +3174,7 @@ if (!MessageDigest.isEqual(expectedSig.getBytes(), receivedSig.getBytes())) {
       <hr class="section-divider">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>回應狀態</th><th>平台行為</th></tr></thead>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">回應狀態</th><th style="color:#fff;padding:10px 14px;font-weight:600;">平台行為</th></tr></thead>
           <tbody>
             <tr><td><code>2xx</code></td><td>成功，不重試</td></tr>
             <tr><td><code>4xx</code></td><td>永久失敗，不重試</td></tr>
@@ -2610,7 +3197,7 @@ if (!MessageDigest.isEqual(expectedSig.getBytes(), receivedSig.getBytes())) {
         <li>開票失敗與 Email 寄送失敗均不在使用者介面顯示，統一寫入告警報告供工程師排查</li>
       </ul>
 
-      <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);">
+      <div style="margin-top:32px;padding-top:20px;border-top:1px solid #d4e0d4;font-size:12px;color:#7a8a7a;">
         本規格以 LINE OA Plus TW DX Solution 技術文件 v2.0.0 及 DX Solution Phase 2 Product Guide 為準。
       </div>
     </section>
