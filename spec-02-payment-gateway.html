@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec 02 · 藍新金流整合 | LINE OA Plus DX Phase 2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans TC', sans-serif; background: #f7f8f5; color: #1a1a1a; font-size: 15px; line-height: 1.7; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --sidebar-bg: #2d4a2d;
+  --sidebar-hover: #3d6b3d;
+  --sidebar-active: #4a8a4a;
+  --sidebar-text: #c8dfc8;
+  --sidebar-text-active: #ffffff;
+  --sidebar-width: 270px;
+  --content-max: 900px;
+  --tag-line: #1a73e8; --tag-line-bg: #e8f0fe;
+  --tag-internal: #e65c00; --tag-internal-bg: #fff3e0;
+  --tag-pending: #7b5ea7; --tag-pending-bg: #f3eeff;
+  --border: #e0e0e0;
+  --bg: #f7f8f5;
+  --white: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #666;
+  --code-bg: #f4f6f0;
+  --accent: #2d4a2d;
+  --activated: #2e7d32;
+  --warning: #e65100;
+  --expired: #c62828;
+  --info: #1565c0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-logo .doc-series {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(200,223,200,0.6); margin-bottom: 5px;
+}
+
+.sidebar-logo h2 { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.4; }
+
+.sidebar-nav { padding: 8px 0; flex: 1; }
+
+.nav-spec-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 6px;
+  cursor: pointer;
+  user-select: none;
+  border-left: 3px solid transparent;
+  transition: background 0.15s;
+}
+
+.nav-spec-header:hover { background: rgba(255,255,255,0.05); }
+
+.nav-spec-header.active-group {
+  background: rgba(255,255,255,0.07);
+  border-left-color: #7ec87e;
+}
+
+.nav-spec-badge {
+  background: var(--sidebar-active);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.nav-spec-title { font-size: 12px; font-weight: 600; color: #e0f0e0; flex: 1; line-height: 1.3; }
+.nav-spec-arrow { font-size: 10px; color: rgba(200,223,200,0.5); transition: transform 0.2s; }
+.nav-spec-header.open .nav-spec-arrow { transform: rotate(90deg); }
+
+.nav-sub {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.nav-sub.open { max-height: 800px; }
+
+.nav-sub a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px 7px 20px;
+  color: rgba(200,223,200,0.75);
+  text-decoration: none;
+  font-size: 12px;
+  border-left: 3px solid transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-sub a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+.nav-sub a.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-left-color: #7ec87e;
+  font-weight: 600;
+}
+
+.nav-sub .nav-icon { font-size: 12px; opacity: 0.7; flex-shrink: 0; }
+
+.nav-spec-header.disabled { opacity: 0.45; cursor: default; pointer-events: none; }
+
+.sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 10.5px;
+  color: rgba(200,223,200,0.35);
+  line-height: 1.7;
+}
+
+/* ── Main ── */
+#main { margin-left: var(--sidebar-width); flex: 1; min-height: 100vh; }
+
+/* ── Spec panels ── */
+.spec-panel { display: none; }
+.spec-panel.active { display: block; }
+
+.doc-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 48px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.doc-header .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+.doc-header h1 {
+  font-size: 24px; font-weight: 700; color: var(--accent);
+  line-height: 1.3; margin-bottom: 10px;
+}
+
+.doc-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
+.doc-meta span { display: flex; align-items: center; gap: 4px; }
+
+.content-area { max-width: var(--content-max); margin: 0 auto; padding: 36px 48px 80px; }
+
+/* ── Shared section styles ── */
+.spec-section {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 28px; overflow: hidden;
+}
+
+.section-header {
+  padding: 16px 26px; background: #f9faf7;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+
+.section-num {
+  width: 28px; height: 28px; background: var(--accent); color: #fff;
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+
+.section-header h2 { font-size: 15.5px; font-weight: 700; color: var(--accent); flex: 1; }
+.section-body { padding: 22px 26px; }
+
+/* ── Tags ── */
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px; vertical-align: middle; margin-left: 4px;
+}
+.tag-line { background: var(--tag-line-bg); color: var(--tag-line); }
+.tag-internal { background: var(--tag-internal-bg); color: var(--tag-internal); }
+.tag-pending { background: var(--tag-pending-bg); color: var(--tag-pending); }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 14px 0; }
+th {
+  background: #f2f4ef; font-weight: 600; color: var(--accent);
+  padding: 10px 14px; text-align: left; border: 1px solid var(--border); font-size: 12.5px;
+}
+td { padding: 9px 14px; border: 1px solid var(--border); vertical-align: top; line-height: 1.65; }
+tr:nth-child(even) td { background: #fcfcfb; }
+td code, th code {
+  background: var(--code-bg); padding: 1px 6px; border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #c7254e;
+}
+
+/* ── Code blocks ── */
+pre {
+  background: #1e2a1e; color: #c8dfc8; border-radius: 8px;
+  padding: 16px 18px; overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7;
+  margin: 14px 0; border: 1px solid rgba(255,255,255,0.05);
+}
+.code-label {
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 5px; font-family: 'JetBrains Mono', monospace;
+}
+pre .key { color: #81c784; } pre .str { color: #ffcc80; }
+pre .num { color: #80cbc4; } pre .cmt { color: #6a8f6a; font-style: italic; }
+pre .kw  { color: #ce93d8; } pre .fn  { color: #90caf9; }
+
+/* ── Callouts ── */
+.callout {
+  border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-size: 13.5px;
+  line-height: 1.65; display: flex; gap: 10px; align-items: flex-start;
+}
+.callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.callout-body { flex: 1; }
+.callout-body strong { display: block; margin-bottom: 4px; font-size: 13px; }
+.callout-block  { background: #fff0f0; border: 2px solid #f5a5a5; color: #7a1a1a; }
+.callout-warning{ background: #fff8e1; border: 1px solid #ffe082; color: #6d4c00; }
+.callout-info   { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; }
+.callout-note   { background: #f3eeff; border: 1px solid #ce93d8; color: #4a148c; }
+.callout-success{ background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+
+/* ── Typography ── */
+h3 {
+  font-size: 14px; font-weight: 700; color: #2d4a2d;
+  margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e8f0e8;
+  display: flex; align-items: center; gap: 8px;
+}
+h3:first-child { margin-top: 0; }
+h4 { font-size: 13px; font-weight: 700; color: #3d5a3d; margin: 16px 0 8px; }
+p { margin-bottom: 10px; color: #333; font-size: 14px; }
+ul, ol { margin: 8px 0 12px 20px; font-size: 14px; line-height: 1.8; }
+li { margin-bottom: 3px; }
+strong { color: var(--text); }
+a { color: #1a73e8; }
+
+/* ── Spec 02 specific ── */
+.role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.badge-12cm { background: #e8f5e9; color: #2e7d32; }
+.badge-line { background: #e3f2fd; color: #1565c0; }
+.badge-newebpay { background: #fff3e0; color: #e65100; }
+.badge-block { background: #ffebee; color: #c62828; }
+.badge-ok   { background: #e8f5e9; color: #2e7d32; }
+.badge-warn { background: #fff8e1; color: #e65c00; }
+
+.scope-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 14px 0; }
+.scope-card { border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
+.scope-card .scope-title { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.scope-card ul { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.8; }
+.scope-line { background: #e3f2fd; } .scope-line .scope-title { color: #1565c0; }
+.scope-pay  { background: #fff3e0; } .scope-pay .scope-title  { color: #e65100; }
+.scope-12cm { background: #e8f5e9; } .scope-12cm .scope-title { color: #2e7d32; }
+
+.flow-box { background: #f9faf7; border: 1px solid var(--border); border-radius: 10px; padding: 22px 26px; margin: 14px 0; }
+.flow-step { display: flex; align-items: flex-start; gap: 14px; padding: 10px 0; position: relative; }
+.flow-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 38px; width: 2px; height: calc(100% - 14px); background: #c5d8c5; }
+.flow-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; position: relative; z-index: 1; }
+.dot-line { background: #e3f2fd; color: #1565c0; border: 2px solid #90caf9; }
+.dot-user { background: #f3eeff; color: #4a148c; border: 2px solid #ce93d8; }
+.dot-12cm { background: #e8f5e9; color: #2e7d32; border: 2px solid #a5d6a7; }
+.dot-pay  { background: #fff3e0; color: #e65100; border: 2px solid #ffcc80; }
+.flow-content { padding-top: 6px; flex: 1; }
+.flow-content .actor { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
+.flow-content .desc { font-size: 13.5px; color: #333; line-height: 1.5; }
+.flow-content .note { font-size: 12px; color: #888; margin-top: 3px; }
+
+.retry-row { display: flex; align-items: center; gap: 0; margin: 16px 0; overflow-x: auto; }
+.retry-node { text-align: center; flex-shrink: 0; }
+.retry-circle { width: 44px; height: 44px; border-radius: 50%; background: #fff8e1; border: 2px solid #ffcc80; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #6d4c00; margin: 0 auto 4px; }
+.retry-label { font-size: 11px; color: #888; }
+.retry-arrow { flex: 1; height: 2px; background: #ddd; position: relative; min-width: 40px; }
+.retry-arrow::after { content: attr(data-label); position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #e65100; white-space: nowrap; font-weight: 600; }
+
+.impl-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 13.5px; }
+.impl-item:last-child { border-bottom: none; }
+.impl-icon { width: 28px; height: 28px; background: var(--accent); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+.impl-body { flex: 1; }
+.impl-body strong { font-size: 13.5px; display: block; margin-bottom: 3px; }
+.impl-body p { font-size: 13px; color: #555; margin: 0; }
+
+/* ── Spec 03 specific ── */
+.flow-svg-wrap { background: #f9faf7; border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; }
+.condition-list { background: #f0f7f0; border: 1px solid #b2dfb2; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+.condition-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 13.5px; }
+.condition-item:not(:last-child) { border-bottom: 1px solid #d4ecd4; }
+.check-icon { width: 20px; height: 20px; background: #2e7d32; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+.format-box { background: #1e2a1e; color: #c8dfc8; border-radius: 8px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 12px 0; }
+.format-box .label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #6a8f6a; margin-bottom: 6px; }
+.format-box .pattern { color: #81c784; margin-bottom: 8px; }
+.format-box .example { color: #ffcc80; }
+.status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.badge-err2 { background: #ffebee; color: #c62828; }
+.account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.account-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #fcfcfb; }
+.account-card .plan-label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.account-card .plan-name { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.account-card p { font-size: 13px; margin-bottom: 0; color: #555; }
+
+/* ── Spec 04 specific ── */
+.api-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+.api-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.api-card-header { background: #f2f4ef; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+.api-type-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.3px; }
+.badge-async { background: #e3f2fd; color: #1565c0; }
+.badge-sync  { background: #e8f5e9; color: #2e7d32; }
+.api-card-header code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #1a1a1a; font-weight: 600; }
+.api-card-body { padding: 10px 14px; font-size: 13px; color: #555; }
+
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+.role-card { border-radius: 8px; padding: 18px; border: 2px solid; }
+.role-admin    { border-color: #90caf9; background: #e3f2fd; }
+.role-operator { border-color: #ffcc80; background: #fff8e1; }
+.role-card .role-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.role-admin .role-name    { color: #1565c0; }
+.role-operator .role-name { color: #e65100; }
+.role-card .role-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.role-card .perm-list { list-style: none; margin: 0; padding: 0; }
+.role-card .perm-item { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.05); line-height: 1.5; }
+.role-card .perm-item:last-child { border-bottom: none; }
+.perm-ok { color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+.perm-no { color: #c62828; font-weight: 700; flex-shrink: 0; }
+
+.env-staging { background: #fff3e0; color: #e65100; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.env-prod    { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+
+.browser-row { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+.browser-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 13.5px; min-width: 200px; }
+.browser-icon { font-size: 22px; }
+.browser-name { font-weight: 600; font-size: 13px; }
+.browser-note { font-size: 11.5px; color: var(--text-muted); }
+.support-full    { border-left: 4px solid #2e7d32; }
+.support-partial { border-left: 4px solid #e65100; }
+
+.sandbox-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13.5px; }
+.sandbox-item:last-child { border-bottom: none; }
+.sandbox-attr { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #c7254e; background: var(--code-bg); padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+
+
+/* ── Download button ── */
+.doc-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #2d4a2d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.doc-download-btn:hover { background: #3d6b3d; color: #fff; }
+.doc-download-btn svg { flex-shrink: 0; }
+.doc-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.doc-header-row h1 { flex: 1; min-width: 0; }
+
+.scroll-target { scroll-margin-top: 80px; }
+
+@media (max-width: 900px) {
+  #sidebar { width: 220px; }
+  #main { margin-left: 220px; }
+  .doc-header, .content-area { padding-left: 24px; padding-right: 24px; }
+  .scope-grid, .api-grid, .role-grid { grid-template-columns: 1fr; }
+}
+
+/#panel-01 * ── Spec 01 Invoice styles ── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --green-dark: #2d4a2d;
+    --green-mid: #3d6b3d;
+    --green-light: #e8f0e8;
+    --green-accent: #4a7c4a;
+    --green-hover: #f0f5f0;
+    --border: #d4e0d4;
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a5a4a;
+    --text-muted: #7a8a7a;
+    --bg: #ffffff;
+    --bg-page: #f7faf7;
+    --table-head: #3d6b3d;
+    --table-stripe: #f4f8f4;
+    --code-bg: #f0f4f0;
+    --code-border: #c8d8c8;
+    --note-bg: #f0f7f0;
+    --note-border: #4a7c4a;
+    --warning-bg: #fffbf0;
+    --warning-border: #c8a832;
+    --tag-internal-bg: #fff3e0;
+    --tag-internal: #b45309;
+    --tag-line-bg: #e8f0fe;
+    --tag-line: #1a56db;
+    --sidebar-w: 240px;
+  }#panel-01 #panel-01 body {
+    font-family: -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    background: var(--bg-page);
+    display: flex;
+    min-height: 100vh;
+  }#panel-01 /* ── Sidebar ── */
+#panel-01 #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--green-dark);
+    color: #fff;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }#panel-01 #panel-01 #sidebar-title {
+    padding: 20px 18px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    line-height: 1.4;
+  }#panel-01 #panel-01 #sidebar-title span {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.6;
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }#panel-01 #panel-01 #sidebar nav { padding: 12px 0 24px; flex: 1; }#panel-01 #panel-01 .nav-group-label {
+    padding: 14px 18px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }#panel-01 #panel-01 .nav-item {
+    display: block;
+    padding: 7px 18px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.82);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    border-left: 3px solid transparent;
+  }#panel-01 #panel-01 .nav-item:hover, #panel-01 #panel-01 .nav-item.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-left-color: rgba(255,255,255,0.6);
+  }#panel-01 #panel-01 .nav-item.sub {
+    padding-left: 30px;
+    font-size: 12.5px;
+    opacity: 0.85;
+  }#panel-01 /* ── Main ── */
+#panel-01 #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0 0 80px;
+  }#panel-01 /* ── Top actions bar ── */
+#panel-01 #topbar {
+    position: sticky;
+    top: 0;
+    background: rgba(247,250,247,0.95);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 48px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    z-index: 50;
+  }#panel-01 #panel-01 .btn-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }#panel-01 #panel-01 .btn-dl:hover { border-color: var(--green-accent); color: var(--green-accent); }#panel-01 /* ── Content ── */
+#panel-01 #content { padding: 40px 48px; max-width: 900px; }#panel-01 #panel-01 section { margin-bottom: 56px; scroll-margin-top: 58px; }#panel-01 #panel-01 h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }#panel-01 #panel-01 .meta-line {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }#panel-01 #panel-01 .section-divider {
+    border: none;
+    border-top: 2px solid var(--green-dark);
+    margin: 0 0 24px;
+  }#panel-01 #panel-01 h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }#panel-01 #panel-01 h2 .section-num {
+    display: inline-block;
+    background: var(--green-dark);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }#panel-01 #panel-01 h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 24px 0 12px;
+    scroll-margin-top: 58px;
+  }#panel-01 #panel-01 p { margin-bottom: 12px; color: var(--text-secondary); }#panel-01 /* Tags */
+#panel-01 .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+  }#panel-01 #panel-01 .tag-line { background: var(--tag-line-bg); color: var(--tag-line); }#panel-01 #panel-01 .tag-internal { background: var(--tag-internal-bg); color: var(--tag-internal); }#panel-01 /* Tables */
+#panel-01 .table-wrap { overflow-x: auto; margin-bottom: 20px; }#panel-01 #panel-01 table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }#panel-01 #panel-01 thead tr { background: var(--table-head); }#panel-01 #panel-01 thead th {
+    padding: 10px 14px;
+    text-align: left;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+  }#panel-01 #panel-01 tbody tr:nth-child(even) { background: var(--table-stripe); }#panel-01 #panel-01 tbody tr:hover { background: var(--green-hover); }#panel-01 #panel-01 td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 td:first-child { font-weight: 500; color: var(--text-primary); white-space: nowrap; }#panel-01 #panel-01 .badge-y {
+    display: inline-block;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 #panel-01 .badge-n {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 #panel-01 .badge-cond {
+    display: inline-block;
+    background: #fef9c3;
+    color: #854d0e;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 /* Code */
+#panel-01 code {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #2d4a2d;
+  }#panel-01 #panel-01 pre {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-left: 4px solid var(--green-accent);
+    border-radius: 6px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+  }#panel-01 /* Callouts */
+#panel-01 .callout {
+    border-left: 4px solid var(--note-border);
+    background: var(--note-bg);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 .callout-warning {
+    border-left-color: var(--warning-border);
+    background: var(--warning-bg);
+  }#panel-01 #panel-01 .callout strong { color: var(--text-primary); }#panel-01 /* Note for internal design */
+#panel-01 .note-internal {
+    border: 1px dashed var(--tag-internal);
+    background: var(--tag-internal-bg);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--tag-internal);
+    margin-bottom: 20px;
+  }#panel-01 /* Flow diagram */
+#panel-01 .flow {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }#panel-01 #panel-01 .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    position: relative;
+  }#panel-01 #panel-01 .flow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    bottom: -8px;
+    width: 2px;
+    background: var(--border);
+  }#panel-01 #panel-01 .flow-dot {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 50%;
+    background: var(--green-dark);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 1;
+  }#panel-01 #panel-01 .flow-dot.branch { background: var(--green-accent); }#panel-01 #panel-01 .flow-dot.end { background: #166534; }#panel-01 #panel-01 .flow-text {
+    padding-top: 5px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 .flow-text strong { color: var(--text-primary); }#panel-01 #panel-01 .flow-branch {
+    margin-left: 42px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }#panel-01 #panel-01 .flow-branch::before { content: '├─ '; color: var(--text-muted); }#panel-01 #panel-01 .flow-branch:last-child::before { content: '└─ '; color: var(--text-muted); }#panel-01 /* List */
+#panel-01 ul.spec-list {
+    padding-left: 20px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }#panel-01 #panel-01 ul.spec-list li { margin-bottom: 7px; }#panel-01 /* Prototype embed section */
+#panel-01 .prototype-wrap {
+    border: 2px solid var(--green-accent);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }#panel-01 #panel-01 .prototype-header {
+    background: var(--green-dark);
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }#panel-01 #panel-01 .prototype-body {
+    background: #fff;
+    padding: 28px 32px;
+  }
+
+  /* Responsive tweak */
+  @media (max-width: 768px) {#panel-01 #panel-01 #sidebar { display: none; }#panel-01 #panel-01 #main { margin-left: 0; }#panel-01 #panel-01 #content { padding: 24px 20px; }
+  }
+
+</style>
+</head>
+<body>
+<!-- ── Spec 02 Panel ── -->
+  <div style="display:block;" id="panel-02">
+    <header class="doc-header">
+      <div class="breadcrumb">LINE OA Plus DX Phase 2 › 開發規格文件</div>
+      <div class="doc-header-row">
+        <h1>Spec 02 · 藍新金流整合<br><small style="font-size:15px;font-weight:400;color:#555;">Payment Gateway Integration</small></h1>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <button class="doc-download-btn" onclick="downloadMD('02')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 下載 .md
+          </button>
+          <a class="doc-download-btn" style="background:#1a5fa8;text-decoration:none;" href="assets/LINE_OA_Plus_TW_DX_Solution_v2.0.0.pdf" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 技術文件 v2.0.0
+          </a>
+          <a class="doc-download-btn" style="background:#1a5fa8;text-decoration:none;" href="assets/LINE_OA_Plus_TW_DX_Solution_Phase2_Product_Guide.pdf" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Product Guide
+          </a>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <span>📅 2026-05-21</span><span>📌 版本 1.0</span>
+        <span>📚 Product Guide §6.1, §14.1</span>
+      </div>
+    </header>
+    <div class="content-area">
+<!-- ── 1. 功能概述 ── -->
+    <div class="spec-section scroll-target" id="s02-overview">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <h2>功能概述</h2>
+      </div>
+      <div class="section-body">
+        <p>12CM 是藍新金流的<strong>收款方（Merchant）</strong>，須完成藍新金流帳號申請與綁定，才能在 OA Plus 上支援付費 Plugin。</p>
+        <p>金流操作（授權、請款、退款、自動續扣、retry）全部由 <strong>OA Plus 平台代為執行</strong>，12CM 不直接呼叫藍新 API。12CM 的角色是透過 Webhook 與 Open API 取得付款結果，並據此處理內部權益開通與發票流程。</p>
+
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ️</span>
+          <div class="callout-body">
+            <strong>定位說明</strong>
+            本文件涵蓋：金流整合責任範圍劃分、前置條件清單、付款流程架構、Trial 差異、自動續扣、扣款失敗寬限期機制，以及 12CM 的實作項目。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. 責任範圍 ── -->
+    <div class="spec-section scroll-target" id="s02-scope">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <h2>責任範圍劃分 <span class="tag tag-internal">內部邏輯</span></h2>
+      </div>
+      <div class="section-body">
+        <p>三方角色的責任邊界如下：</p>
+
+        <div class="scope-grid">
+          <div class="scope-card scope-line">
+            <div class="scope-title">LINE OA Plus 平台</div>
+            <ul>
+              <li>建立 Subscription</li>
+              <li>建立 Payment</li>
+              <li>導向藍新付款頁</li>
+              <li>接收藍新付款結果</li>
+              <li>管理自動續扣時序</li>
+              <li>執行 retry / 寬限期</li>
+              <li>更新 Subscription 狀態</li>
+              <li>發送 Webhook 通知 12CM</li>
+            </ul>
+          </div>
+          <div class="scope-card scope-pay">
+            <div class="scope-title">藍新金流</div>
+            <ul>
+              <li>信用卡授權</li>
+              <li>請款 / 補扣</li>
+              <li>退款處理</li>
+              <li>回傳付款結果給 LINE</li>
+            </ul>
+          </div>
+          <div class="scope-card scope-12cm">
+            <div class="scope-title">12CM（Partner）</div>
+            <ul>
+              <li>申請藍新帳號（收款方）</li>
+              <li>綁定帳號至 OA Plus</li>
+              <li>接收 Webhook 通知</li>
+              <li>查詢付款結果（Open API）</li>
+              <li>判斷是否開票</li>
+              <li>判斷是否啟用進階版</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout-success">
+          <span class="callout-icon">✅</span>
+          <div class="callout-body">
+            <strong>12CM 不直接呼叫藍新 API</strong>
+            所有藍新金流操作均由 LINE 平台代為處理。12CM 只需完成帳號申請與綁定，後續僅需處理 LINE 發出的 Webhook 事件。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. 前置條件 ── -->
+    <div class="spec-section scroll-target" id="s02-prerequisites">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <h2>前置條件</h2>
+      </div>
+      <div class="section-body">
+
+        <div class="callout callout-block">
+          <span class="callout-icon">⛔</span>
+          <div class="callout-body">
+            <strong>開發封鎖警告</strong>
+            以下項目須全部完成，工程師才能進行整合測試。詳細申請步驟、負責方與當前狀態請至
+            <a href="phase2-onboarding-checklist.html" style="color:#c62828;font-weight:600;">Phase 2 對接清單 ↗</a> 追蹤。
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>說明</th>
+              <th>負責方</th>
+              <th>開發依賴</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>藍新金流帳號申請</td>
+              <td>12CM 需自行向藍新申請收款帳號</td>
+              <td><span class="role-badge badge-12cm">12CM</span></td>
+              <td><span class="role-badge badge-block">⛔ 須完成</span></td>
+            </tr>
+            <tr>
+              <td>藍新審核通過</td>
+              <td>審核通過後付費 Plugin 才能上架</td>
+              <td><span class="role-badge badge-newebpay">藍新</span></td>
+              <td><span class="role-badge badge-block">⛔ 須完成</span></td>
+            </tr>
+            <tr>
+              <td>金流帳號綁定</td>
+              <td>在 OA Plus 後台完成綁定設定</td>
+              <td><span class="role-badge badge-12cm">12CM</span> + <span class="role-badge badge-line">LINE Ops</span></td>
+              <td><span class="role-badge badge-block">⛔ 須完成</span></td>
+            </tr>
+            <tr>
+              <td>Phase 2 Plugin Id / Secrets 核發</td>
+              <td>LINE 核發 Plugin Id、Secret of Admin Plugin、Secret of Issue Auth Token</td>
+              <td><span class="role-badge badge-line">LINE</span></td>
+              <td><span class="role-badge badge-block">⛔ 須完成</span></td>
+            </tr>
+            <tr>
+              <td>Webhook URL 設定完成</td>
+              <td><code>ACTIVATION_CHANGED</code> 與 <code>PAYMENT_SUCCEEDED</code> 兩支 Webhook URL 已在 OA Plus 完成設定</td>
+              <td><span class="role-badge badge-12cm">12CM</span> + <span class="role-badge badge-line">LINE</span></td>
+              <td><span class="role-badge badge-block">⛔ 須完成</span></td>
+            </tr>
+            <tr>
+              <td>Open API 白名單 IP 登記</td>
+              <td>向 LINE 提交 12CM 伺服器 IPv4 CIDR</td>
+              <td><span class="role-badge badge-12cm">12CM</span> + <span class="role-badge badge-line">LINE</span></td>
+              <td><span class="role-badge badge-warn">整合測試前須完成</span></td>
+            </tr>
+            <tr>
+              <td>Staging Open API 環境上線</td>
+              <td>目前 Not ready, in progress</td>
+              <td><span class="role-badge badge-line">LINE</span></td>
+              <td><span class="role-badge badge-warn">整合測試前須完成</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            若藍新金流帳號尚未完成申請與審核，Plugin 將無法支援付費版，只能提供免費版功能。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4. 付款流程架構 ── -->
+    <div class="spec-section scroll-target" id="s02-flow">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <h2>付款流程架構 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+
+        <div class="flow-box">
+          <div class="flow-step">
+            <div class="flow-dot dot-user">👤</div>
+            <div class="flow-content">
+              <div class="actor">使用者</div>
+              <div class="desc">在 Checkout 填寫資訊並同意條款</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot dot-line">LINE</div>
+            <div class="flow-content">
+              <div class="actor">OA Plus 平台</div>
+              <div class="desc">建立 Subscription</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot dot-line">LINE</div>
+            <div class="flow-content">
+              <div class="actor">OA Plus 平台</div>
+              <div class="desc">建立 Payment 並建立交易，導向藍新付款頁（或授權頁，Trial 情境）</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot dot-user">👤</div>
+            <div class="flow-content">
+              <div class="actor">使用者</div>
+              <div class="desc">完成付款 / 授權</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot dot-pay">藍新</div>
+            <div class="flow-content">
+              <div class="actor">藍新金流</div>
+              <div class="desc">回傳付款結果至 OA Plus</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot dot-line">LINE</div>
+            <div class="flow-content">
+              <div class="actor">OA Plus 平台</div>
+              <div class="desc">更新 Subscription 狀態，發送 <code>PAYMENT_SUCCEEDED</code> 與 <code>ACTIVATION_CHANGED</code> Webhook</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot dot-12cm">12CM</div>
+            <div class="flow-content">
+              <div class="actor">12CM Partner System</div>
+              <div class="desc">收到 Webhook → 查詢 Open API → 判斷開票 / 啟用進階版</div>
+              <div class="note">詳見 Spec 01（發票）、Spec 03（Premium Activation）</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 5. Trial ── -->
+    <div class="spec-section scroll-target" id="s02-trial">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <h2>Trial（試用）訂閱的付款差異 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr><th>情境</th><th>付款行為</th><th>藍新動作</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>無 Trial 一般訂閱</td>
+              <td>立即向使用者請款</td>
+              <td>授權 + 立即請款</td>
+            </tr>
+            <tr>
+              <td>含 Trial 訂閱</td>
+              <td>僅進行付款方式<strong>授權</strong>，不立即扣款；Trial 到期後建立第一期帳單並正式扣款</td>
+              <td>授權綁卡（不請款）→ Trial 到期後請款</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ️</span>
+          <div class="callout-body">
+            Trial 期間為 <strong>1 個月（30 天）</strong>，由 LINE 依確認天數設定。授權→請款的時序均由 LINE 平台自動管理，12CM 無需額外處理。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 6. 自動續扣 ── -->
+    <div class="spec-section scroll-target" id="s02-autorenew">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <h2>自動續扣機制 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <ul>
+          <li>Subscription 有效且到達當期結束點時，平台<strong>自動發起</strong>續扣，每月同一天執行</li>
+          <li>12CM 無需主動觸發，只需監聽後續 Webhook</li>
+        </ul>
+
+        <table style="margin-top:14px;">
+          <thead><tr><th>續扣結果</th><th>平台行為</th><th>12CM 收到</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>✅ 成功</td>
+              <td>Subscription 維持有效，建立下一期計費紀錄</td>
+              <td><code>PAYMENT_SUCCEEDED</code></td>
+            </tr>
+            <tr>
+              <td>❌ 失敗</td>
+              <td>進入寬限期（Grace Period），Subscription 主狀態維持 <code>ACTIVATED</code></td>
+              <td>（無立即通知，等 retry 結果）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 7. 寬限期 ── -->
+    <div class="spec-section scroll-target" id="s02-grace">
+      <div class="section-header">
+        <div class="section-num">7</div>
+        <h2>扣款失敗與寬限期 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+
+        <table>
+          <thead><tr><th>階段</th><th>Subscription 狀態</th><th>使用者權益</th><th>12CM 動作</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>付款失敗，進入寬限期</td>
+              <td><code>ACTIVATED</code>（不變）</td>
+              <td>✅ 仍可使用</td>
+              <td>無需動作</td>
+            </tr>
+            <tr>
+              <td>寬限期內 retry 成功</td>
+              <td><code>ACTIVATED</code>（繼續）</td>
+              <td>✅ 正常</td>
+              <td>收到 <code>PAYMENT_SUCCEEDED</code> → 開票</td>
+            </tr>
+            <tr>
+              <td>寬限期到期，所有 retry 仍失敗<br><small style="color:#888;">寬限期約 7–10 天，由 LINE 平台決定並通知</small></td>
+              <td><code>EXPIRED</code></td>
+              <td>❌ 切回免費版</td>
+              <td>收到 <code>ACTIVATION_CHANGED</code> → 停止付費權益</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Webhook retry 時序（LINE → 12CM）</h3>
+        <div class="retry-row">
+          <div class="retry-node">
+            <div class="retry-circle">觸發</div>
+            <div class="retry-label">0s</div>
+          </div>
+          <div class="retry-arrow" data-label="失敗 5xx/429"></div>
+          <div class="retry-node">
+            <div class="retry-circle">1st<br>retry</div>
+            <div class="retry-label">+1s</div>
+          </div>
+          <div class="retry-arrow" data-label="失敗"></div>
+          <div class="retry-node">
+            <div class="retry-circle">2nd<br>retry</div>
+            <div class="retry-label">+2s</div>
+          </div>
+          <div class="retry-arrow" data-label="失敗"></div>
+          <div class="retry-node">
+            <div class="retry-circle">3rd<br>retry</div>
+            <div class="retry-label">+4s</div>
+          </div>
+          <div class="retry-arrow" data-label="仍失敗 → 標記 failed"></div>
+          <div class="retry-node">
+            <div class="retry-circle" style="background:#ffebee;border-color:#e57373;color:#c62828;">FAIL</div>
+            <div class="retry-label">不再重試</div>
+          </div>
+        </div>
+
+        <div class="callout callout-warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            12CM 不應將寬限期視為獨立的外部訂閱狀態，仍以 Subscription 主狀態為準。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 8. 付款方式更新 ── -->
+    <div class="spec-section scroll-target" id="s02-payment-update">
+      <div class="section-header">
+        <div class="section-num">8</div>
+        <h2>付款方式更新 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <ul>
+          <li>有效訂閱期間，<strong>Admin 角色</strong>可更新付款方式（綁定新卡）</li>
+          <li>更新後僅影響<strong>未來</strong>續扣或補扣，不影響已完成的歷史扣款</li>
+          <li>12CM 系統<strong>無需針對付款方式更新做任何處理</strong>，此行為完全由 LINE 平台管理</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── 9. 實作項目 ── -->
+    <div class="spec-section scroll-target" id="s02-impl">
+      <div class="section-header">
+        <div class="section-num">9</div>
+        <h2>12CM 需實作項目 <span class="tag tag-internal">內部邏輯</span></h2>
+      </div>
+      <div class="section-body">
+
+        <div class="impl-item">
+          <div class="impl-icon">①</div>
+          <div class="impl-body">
+            <strong>接收 <code>PAYMENT_SUCCEEDED</code> Webhook</strong>
+            <p>驗證 <code>X-DX-Signature</code>，解析 payload，取得 <code>paymentOrderId</code></p>
+          </div>
+        </div>
+        <div class="impl-item">
+          <div class="impl-icon">②</div>
+          <div class="impl-body">
+            <strong>呼叫 Retrieve Payment Open API</strong>
+            <p>取得付款快照，確認付款結果，作為後續開票依據（詳見 Spec 01）</p>
+          </div>
+        </div>
+        <div class="impl-item">
+          <div class="impl-icon">③</div>
+          <div class="impl-body">
+            <strong>接收 <code>ACTIVATION_CHANGED</code> Webhook</strong>
+            <p>訂閱啟用或失效（EXPIRED）時，同步更新 12CM 系統中的服務權益（詳見 Spec 03）</p>
+          </div>
+        </div>
+        <div class="impl-item">
+          <div class="impl-icon">④</div>
+          <div class="impl-body">
+            <strong>訂閱狀態同步</strong>
+            <p>根據 Subscription 狀態與 plugin level 判斷商戶是否具備付費功能存取權（詳見 Spec 03 §6）</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top:16px;">
+          <span class="callout-icon">ℹ️</span>
+          <div class="callout-body">
+            Webhook 僅為事件通知，不含完整明細。收到 Webhook 後，必須再呼叫對應 Open API 查詢完整資訊後再處理。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 10. Webhook 重試 ── -->
+    <div class="spec-section scroll-target" id="s02-webhook-retry">
+      <div class="section-header">
+        <div class="section-num">10</div>
+        <h2>Webhook 重試規範 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <p>OA Plus 對 <code>5xx</code> / <code>429</code> 回應會自動重試：</p>
+        <table>
+          <thead><tr><th>Response Status</th><th>OA Plus 行為</th></tr></thead>
+          <tbody>
+            <tr><td><code>2xx</code></td><td>Success，不重試</td></tr>
+            <tr><td><code>4xx</code></td><td>Permanent failure，不重試</td></tr>
+            <tr><td><code>5xx</code> 或 <code>429</code></td><td>Transient failure，retry 最多 3 次（1s → 2s → 4s），全部失敗後標記為 failed</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 11. API 端點 ── -->
+    <div class="spec-section scroll-target" id="s02-endpoint">
+      <div class="section-header">
+        <div class="section-num">11</div>
+        <h2>Open API 端點 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead><tr><th>環境</th><th>Endpoint</th><th>Rate Limit</th><th>狀態</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Staging</td>
+              <td><code>https://dx-open-api-staging.line-apps.com</code></td>
+              <td>200 RPS</td>
+              <td><span class="role-badge badge-warn">Not ready</span></td>
+            </tr>
+            <tr>
+              <td>Production</td>
+              <td><code>https://dx-open-api.line-apps.com</code></td>
+              <td>800 RPS</td>
+              <td><span class="role-badge badge-warn">Not ready</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 12. 注意事項 ── -->
+    <div class="spec-section scroll-target" id="s02-notes">
+      <div class="section-header">
+        <div class="section-num">12</div>
+        <h2>注意事項</h2>
+      </div>
+      <div class="section-body">
+        <ul>
+          <li>禁止在 Staging / Production 環境進行壓力測試</li>
+          <li>Open API 僅允許 <strong>IPv4 CIDR 格式</strong>的白名單 IP 存取，需提前向 LINE 登記</li>
+          <li>Auth Token 有效期為 <strong>5 分鐘</strong>，需在 token 過期前重新取得</li>
+          <li>Reverse Proxy 不支援 3xx redirect（除 304 Not Modified），後端不可回傳 redirect 回應</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    </div>
+  </div>
+<script>
+const MD_02 = "# \u958b\u767c\u898f\u683c\u6587\u4ef6 #02\uff1a\u85cd\u65b0\u91d1\u6d41\u6574\u5408\n\n**\u7248\u672c**\uff1a1.0 | **\u65e5\u671f**\uff1a2026-05-22 | **\u4f9d\u64da\u6587\u4ef6**\uff1aDX Solution Phase 2 Product Guide \u00a7 6.1\u3001\u00a7 14.1\n\n---\n\n## 1. \u529f\u80fd\u6982\u8ff0\n\n12CM \u662f\u85cd\u65b0\u91d1\u6d41\u7684**\u6536\u6b3e\u65b9\uff08Merchant\uff09**\uff0c\u9808\u5b8c\u6210\u85cd\u65b0\u91d1\u6d41\u5e33\u865f\u7533\u8acb\u8207\u7d81\u5b9a\uff0c\u624d\u80fd\u5728 OA Plus \u4e0a\u652f\u63f4\u4ed8\u8cbb Plugin\u3002\n\n\u91d1\u6d41\u64cd\u4f5c\uff08\u6388\u6b0a\u3001\u8acb\u6b3e\u3001\u9000\u6b3e\u3001\u81ea\u52d5\u7e8c\u6263\u3001retry\uff09\u5168\u90e8\u7531 **OA Plus \u5e73\u53f0\u4ee3\u70ba\u57f7\u884c**\uff0c12CM \u4e0d\u76f4\u63a5\u547c\u53eb\u85cd\u65b0 API\u300212CM \u7684\u89d2\u8272\u662f\u900f\u904e Webhook \u8207 Open API \u53d6\u5f97\u4ed8\u6b3e\u7d50\u679c\uff0c\u4e26\u64da\u6b64\u8655\u7406\u5167\u90e8\u6b0a\u76ca\u958b\u901a\u8207\u767c\u7968\u6d41\u7a0b\u3002\n\n---\n\n## 2. \u8cac\u4efb\u7bc4\u570d\u5283\u5206\n\n| \u89d2\u8272 | \u8ca0\u8cac\u9805\u76ee |\n|------|---------|\n| LINE OA Plus \u5e73\u53f0 | \u5efa\u7acb Subscription\u3001\u5efa\u7acb Payment\u3001\u5c0e\u5411\u85cd\u65b0\u4ed8\u6b3e\u9801\u3001\u63a5\u6536\u85cd\u65b0\u4ed8\u6b3e\u7d50\u679c\u3001\u7ba1\u7406\u81ea\u52d5\u7e8c\u6263\u6642\u5e8f\u3001\u57f7\u884c retry / \u5bec\u9650\u671f\u3001\u66f4\u65b0 Subscription \u72c0\u614b\u3001\u767c\u9001 Webhook \u901a\u77e5 12CM |\n| \u85cd\u65b0\u91d1\u6d41 | \u4fe1\u7528\u5361\u6388\u6b0a\u3001\u8acb\u6b3e / \u88dc\u6263\u3001\u9000\u6b3e\u8655\u7406\u3001\u56de\u50b3\u4ed8\u6b3e\u7d50\u679c\u7d66 LINE |\n| 12CM\uff08Partner\uff09 | \u7533\u8acb\u85cd\u65b0\u5e33\u865f\uff08\u6536\u6b3e\u65b9\uff09\u3001\u7d81\u5b9a\u5e33\u865f\u81f3 OA Plus\u3001\u63a5\u6536 Webhook \u901a\u77e5\u3001\u67e5\u8a62\u4ed8\u6b3e\u7d50\u679c\uff08Open API\uff09\u3001\u5224\u65b7\u662f\u5426\u958b\u7968\u3001\u5224\u65b7\u662f\u5426\u555f\u7528\u9032\u968e\u7248 |\n\n> **12CM \u4e0d\u76f4\u63a5\u547c\u53eb\u85cd\u65b0 API**\uff1a\u6240\u6709\u85cd\u65b0\u91d1\u6d41\u64cd\u4f5c\u5747\u7531 LINE \u5e73\u53f0\u4ee3\u70ba\u8655\u7406\u300212CM \u53ea\u9700\u5b8c\u6210\u5e33\u865f\u7533\u8acb\u8207\u7d81\u5b9a\uff0c\u5f8c\u7e8c\u50c5\u9700\u8655\u7406 LINE \u767c\u51fa\u7684 Webhook \u4e8b\u4ef6\u3002\n\n---\n\n## 3. \u524d\u7f6e\u689d\u4ef6\n\n> \u26d4 **\u958b\u767c\u5c01\u9396\u8b66\u544a**\uff1a\u4ee5\u4e0b\u9805\u76ee\u9808\u5168\u90e8\u5b8c\u6210\uff0c\u5de5\u7a0b\u5e2b\u624d\u80fd\u9032\u884c\u6574\u5408\u6e2c\u8a66\u3002\n\n| \u9805\u76ee | \u8aaa\u660e | \u8ca0\u8cac\u65b9 | \u958b\u767c\u4f9d\u8cf4 |\n|------|------|--------|---------|\n| \u85cd\u65b0\u91d1\u6d41\u5e33\u865f\u7533\u8acb | 12CM \u9700\u81ea\u884c\u5411\u85cd\u65b0\u7533\u8acb\u6536\u6b3e\u5e33\u865f | 12CM | \u26d4 \u9808\u5b8c\u6210 |\n| \u85cd\u65b0\u5be9\u6838\u901a\u904e | \u5be9\u6838\u901a\u904e\u5f8c\u4ed8\u8cbb Plugin \u624d\u80fd\u4e0a\u67b6 | \u85cd\u65b0 | \u26d4 \u9808\u5b8c\u6210 |\n| \u91d1\u6d41\u5e33\u865f\u7d81\u5b9a | \u5728 OA Plus \u5f8c\u53f0\u5b8c\u6210\u7d81\u5b9a\u8a2d\u5b9a | 12CM + LINE Ops | \u26d4 \u9808\u5b8c\u6210 |\n| Phase 2 Plugin Id / Secrets \u6838\u767c | LINE \u6838\u767c Plugin Id\u3001Secret of Admin Plugin\u3001Secret of Issue Auth Token | LINE | \u26d4 \u9808\u5b8c\u6210 |\n| Webhook URL \u8a2d\u5b9a\u5b8c\u6210 | `ACTIVATION_CHANGED` \u8207 `PAYMENT_SUCCEEDED` \u5169\u652f Webhook URL \u5df2\u5728 OA Plus \u5b8c\u6210\u8a2d\u5b9a | 12CM + LINE | \u26d4 \u9808\u5b8c\u6210 |\n| Open API \u767d\u540d\u55ae IP \u767b\u8a18 | \u5411 LINE \u63d0\u4ea4 12CM \u4f3a\u670d\u5668 IPv4 CIDR | 12CM + LINE | \u6574\u5408\u6e2c\u8a66\u524d\u9808\u5b8c\u6210 |\n| Staging Open API \u74b0\u5883\u4e0a\u7dda | \u76ee\u524d Not ready, in progress | LINE | \u6574\u5408\u6e2c\u8a66\u524d\u9808\u5b8c\u6210 |\n\n---\n\n## 4. \u4ed8\u6b3e\u6d41\u7a0b\u67b6\u69cb\n\n```\n\u4f7f\u7528\u8005\u5728 Checkout \u586b\u5beb\u8cc7\u8a0a\u4e26\u540c\u610f\u689d\u6b3e\n    \u2193\nOA Plus \u5e73\u53f0\u5efa\u7acb Subscription\n    \u2193\nOA Plus \u5e73\u53f0\u5efa\u7acb Payment\uff0c\u5c0e\u5411\u85cd\u65b0\u4ed8\u6b3e\u9801\uff08Trial \u60c5\u5883\u70ba\u6388\u6b0a\u9801\uff09\n    \u2193\n\u4f7f\u7528\u8005\u5b8c\u6210\u4ed8\u6b3e / \u6388\u6b0a\n    \u2193\n\u85cd\u65b0\u56de\u50b3\u4ed8\u6b3e\u7d50\u679c\u81f3 OA Plus\n    \u2193\nOA Plus \u66f4\u65b0 Subscription \u72c0\u614b\uff0c\u767c\u9001 PAYMENT_SUCCEEDED \u8207 ACTIVATION_CHANGED Webhook\n    \u2193\n12CM \u6536\u5230 Webhook \u2192 \u67e5\u8a62 Open API \u2192 \u5224\u65b7\u958b\u7968 / \u555f\u7528\u9032\u968e\u7248\n```\n\n---\n\n## 5. Trial\uff08\u8a66\u7528\uff09\u8a02\u95b1\u7684\u4ed8\u6b3e\u5dee\u7570\n\n| \u60c5\u5883 | \u4ed8\u6b3e\u884c\u70ba | \u85cd\u65b0\u52d5\u4f5c |\n|------|---------|---------|\n| \u7121 Trial \u4e00\u822c\u8a02\u95b1 | \u7acb\u5373\u5411\u4f7f\u7528\u8005\u8acb\u6b3e | \u6388\u6b0a + \u7acb\u5373\u8acb\u6b3e |\n| \u542b Trial \u8a02\u95b1 | \u50c5\u9032\u884c\u4ed8\u6b3e\u65b9\u5f0f**\u6388\u6b0a**\uff0c\u4e0d\u7acb\u5373\u6263\u6b3e\uff1bTrial \u5230\u671f\u5f8c\u5efa\u7acb\u7b2c\u4e00\u671f\u5e33\u55ae\u4e26\u6b63\u5f0f\u6263\u6b3e | \u6388\u6b0a\u7d81\u5361\uff08\u4e0d\u8acb\u6b3e\uff09\u2192 Trial \u5230\u671f\u5f8c\u8acb\u6b3e |\n\n> Trial \u671f\u9593\u70ba **1 \u500b\u6708\uff0830 \u5929\uff09**\uff0c\u7531 LINE \u4f9d\u78ba\u8a8d\u5929\u6578\u8a2d\u5b9a\u3002\u6388\u6b0a\u2192\u8acb\u6b3e\u7684\u6642\u5e8f\u5747\u7531 LINE \u5e73\u53f0\u81ea\u52d5\u7ba1\u7406\uff0c12CM \u7121\u9700\u984d\u5916\u8655\u7406\u3002\n\n---\n\n## 6. \u81ea\u52d5\u7e8c\u6263\u6a5f\u5236\n\n- Subscription \u6709\u6548\u4e14\u5230\u9054\u7576\u671f\u7d50\u675f\u9ede\u6642\uff0c\u5e73\u53f0**\u81ea\u52d5\u767c\u8d77**\u7e8c\u6263\uff0c\u6bcf\u6708\u540c\u4e00\u5929\u57f7\u884c\n- 12CM \u7121\u9700\u4e3b\u52d5\u89f8\u767c\uff0c\u53ea\u9700\u76e3\u807d\u5f8c\u7e8c Webhook\n\n| \u7e8c\u6263\u7d50\u679c | \u5e73\u53f0\u884c\u70ba | 12CM \u6536\u5230 |\n|---------|---------|---------|\n| \u2705 \u6210\u529f | Subscription \u7dad\u6301\u6709\u6548\uff0c\u5efa\u7acb\u4e0b\u4e00\u671f\u8a08\u8cbb\u7d00\u9304 | `PAYMENT_SUCCEEDED` |\n| \u274c \u5931\u6557 | \u9032\u5165\u5bec\u9650\u671f\uff08Grace Period\uff09\uff0cSubscription \u4e3b\u72c0\u614b\u7dad\u6301 `ACTIVATED` | \uff08\u7121\u7acb\u5373\u901a\u77e5\uff0c\u7b49 retry \u7d50\u679c\uff09 |\n\n---\n\n## 7. \u6263\u6b3e\u5931\u6557\u8207\u5bec\u9650\u671f\n\n| \u968e\u6bb5 | Subscription \u72c0\u614b | \u4f7f\u7528\u8005\u6b0a\u76ca | 12CM \u52d5\u4f5c |\n|------|-----------------|---------|---------|\n| \u4ed8\u6b3e\u5931\u6557\uff0c\u9032\u5165\u5bec\u9650\u671f | `ACTIVATED`\uff08\u4e0d\u8b8a\uff09 | \u2705 \u4ecd\u53ef\u4f7f\u7528 | \u7121\u9700\u52d5\u4f5c |\n| \u5bec\u9650\u671f\u5167 retry \u6210\u529f | `ACTIVATED`\uff08\u7e7c\u7e8c\uff09 | \u2705 \u6b63\u5e38 | \u6536\u5230 `PAYMENT_SUCCEEDED` \u2192 \u958b\u7968 |\n| \u5bec\u9650\u671f\u5230\u671f\uff0c\u6240\u6709 retry \u4ecd\u5931\u6557\uff08\u7d04 7\u201310 \u5929\uff0c\u7531 LINE \u6c7a\u5b9a\uff09 | `EXPIRED` | \u274c \u5207\u56de\u514d\u8cbb\u7248 | \u6536\u5230 `ACTIVATION_CHANGED` \u2192 \u505c\u6b62\u4ed8\u8cbb\u6b0a\u76ca |\n\n**Webhook retry \u6642\u5e8f\uff08LINE \u2192 12CM\uff09**\uff1a5xx / 429 \u6700\u591a\u91cd\u8a66 3 \u6b21\uff081s \u2192 2s \u2192 4s\uff09\uff0c\u5168\u90e8\u5931\u6557\u5f8c\u6a19\u8a18\u70ba failed\u3002\n\n---\n\n## 8. \u4ed8\u6b3e\u65b9\u5f0f\u66f4\u65b0\n\n- \u6709\u6548\u8a02\u95b1\u671f\u9593\uff0c**Admin \u89d2\u8272**\u53ef\u66f4\u65b0\u4ed8\u6b3e\u65b9\u5f0f\uff08\u7d81\u5b9a\u65b0\u5361\uff09\n- \u66f4\u65b0\u5f8c\u50c5\u5f71\u97ff**\u672a\u4f86**\u7e8c\u6263\u6216\u88dc\u6263\uff0c\u4e0d\u5f71\u97ff\u5df2\u5b8c\u6210\u7684\u6b77\u53f2\u6263\u6b3e\n- 12CM \u7cfb\u7d71**\u7121\u9700\u91dd\u5c0d\u4ed8\u6b3e\u65b9\u5f0f\u66f4\u65b0\u505a\u4efb\u4f55\u8655\u7406**\n\n---\n\n## 9. 12CM \u9700\u5be6\u4f5c\u9805\u76ee\n\n| \u9805\u76ee | \u8aaa\u660e |\n|------|------|\n| \u63a5\u6536 `PAYMENT_SUCCEEDED` Webhook | \u9a57\u8b49 `X-DX-Signature`\uff0c\u89e3\u6790 payload\uff0c\u53d6\u5f97 `paymentOrderId` |\n| \u547c\u53eb Retrieve Payment Open API | \u53d6\u5f97\u4ed8\u6b3e\u5feb\u7167\uff0c\u78ba\u8a8d\u4ed8\u6b3e\u7d50\u679c\uff0c\u4f5c\u70ba\u5f8c\u7e8c\u958b\u7968\u4f9d\u64da\uff08\u8a73\u898b Spec 01\uff09 |\n| \u63a5\u6536 `ACTIVATION_CHANGED` Webhook | \u8a02\u95b1\u555f\u7528\u6216\u5931\u6548\uff08EXPIRED\uff09\u6642\uff0c\u540c\u6b65\u66f4\u65b0 12CM \u7cfb\u7d71\u4e2d\u7684\u670d\u52d9\u6b0a\u76ca\uff08\u8a73\u898b Spec 03\uff09 |\n| \u8a02\u95b1\u72c0\u614b\u540c\u6b65 | \u6839\u64da Subscription \u72c0\u614b\u8207 plugin level \u5224\u65b7\u5546\u6236\u662f\u5426\u5177\u5099\u4ed8\u8cbb\u529f\u80fd\u5b58\u53d6\u6b0a\uff08\u8a73\u898b Spec 03 \u00a76\uff09 |\n\n> Webhook \u50c5\u70ba\u4e8b\u4ef6\u901a\u77e5\uff0c\u4e0d\u542b\u5b8c\u6574\u660e\u7d30\u3002\u6536\u5230 Webhook \u5f8c\uff0c\u5fc5\u9808\u518d\u547c\u53eb\u5c0d\u61c9 Open API \u67e5\u8a62\u5b8c\u6574\u8cc7\u8a0a\u5f8c\u518d\u8655\u7406\u3002\n\n---\n\n## 10. Webhook \u56de\u61c9\u898f\u7bc4\n\n| Response Status | OA Plus \u884c\u70ba |\n|----------------|------------|\n| `2xx` | Success\uff0c\u4e0d\u91cd\u8a66 |\n| `4xx` | Permanent failure\uff0c\u4e0d\u91cd\u8a66 |\n| `5xx` \u6216 `429` | Transient failure\uff0cretry \u6700\u591a 3 \u6b21\uff081s \u2192 2s \u2192 4s\uff09 |\n\n---\n\n## 11. Open API \u7aef\u9ede\n\n| \u74b0\u5883 | Endpoint | Rate Limit | \u72c0\u614b |\n|------|----------|-----------|------|\n| Staging | `https://dx-open-api-staging.line-apps.com` | 200 RPS | Not ready |\n| Production | `https://dx-open-api.line-apps.com` | 800 RPS | Not ready |\n\n---\n\n## 12. \u6ce8\u610f\u4e8b\u9805\n\n- \u7981\u6b62\u5728 Staging / Production \u74b0\u5883\u9032\u884c\u58d3\u529b\u6e2c\u8a66\n- Open API \u50c5\u5141\u8a31 **IPv4 CIDR \u683c\u5f0f**\u7684\u767d\u540d\u55ae IP \u5b58\u53d6\uff0c\u9700\u63d0\u524d\u5411 LINE \u767b\u8a18\n- Auth Token \u6709\u6548\u671f\u70ba **5 \u5206\u9418**\uff0c\u9700\u5728 token \u904e\u671f\u524d\u91cd\u65b0\u53d6\u5f97\n- Reverse Proxy \u4e0d\u652f\u63f4 3xx redirect\uff08\u9664 304 Not Modified\uff09\uff0c\u5f8c\u7aef\u4e0d\u53ef\u56de\u50b3 redirect \u56de\u61c9\n\n---\n\n*\u672c\u898f\u683c\u4ee5 LINE OA Plus TW DX Solution \u6280\u8853\u6587\u4ef6 v2.0.0 \u53ca DX Solution Phase 2 Product Guide \u70ba\u6e96\u3002*\n";;
+const MD_FILES = {"01": "spec-01-invoice-management.md", "02": "spec-02-payment-gateway.md", "03": "spec-03-premium-activation.md", "04": "spec-04-frontend-sdk-roles.md"};
+const MD_DATA = { '01': MD_01, '02': MD_02, '03': MD_03, '04': MD_04 };
+
+function downloadMD(num) {
+  const content = MD_DATA[num];
+  const filename = MD_FILES[num];
+  if (!content) return;
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+</script>
+
+</body>
+</html>

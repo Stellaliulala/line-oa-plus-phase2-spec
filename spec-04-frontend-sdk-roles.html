@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec 04 · 前端 SDK 與角色權限 | LINE OA Plus DX Phase 2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans TC', sans-serif; background: #f7f8f5; color: #1a1a1a; font-size: 15px; line-height: 1.7; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --sidebar-bg: #2d4a2d;
+  --sidebar-hover: #3d6b3d;
+  --sidebar-active: #4a8a4a;
+  --sidebar-text: #c8dfc8;
+  --sidebar-text-active: #ffffff;
+  --sidebar-width: 270px;
+  --content-max: 900px;
+  --tag-line: #1a73e8; --tag-line-bg: #e8f0fe;
+  --tag-internal: #e65c00; --tag-internal-bg: #fff3e0;
+  --tag-pending: #7b5ea7; --tag-pending-bg: #f3eeff;
+  --border: #e0e0e0;
+  --bg: #f7f8f5;
+  --white: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #666;
+  --code-bg: #f4f6f0;
+  --accent: #2d4a2d;
+  --activated: #2e7d32;
+  --warning: #e65100;
+  --expired: #c62828;
+  --info: #1565c0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-logo .doc-series {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(200,223,200,0.6); margin-bottom: 5px;
+}
+
+.sidebar-logo h2 { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.4; }
+
+.sidebar-nav { padding: 8px 0; flex: 1; }
+
+.nav-spec-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 6px;
+  cursor: pointer;
+  user-select: none;
+  border-left: 3px solid transparent;
+  transition: background 0.15s;
+}
+
+.nav-spec-header:hover { background: rgba(255,255,255,0.05); }
+
+.nav-spec-header.active-group {
+  background: rgba(255,255,255,0.07);
+  border-left-color: #7ec87e;
+}
+
+.nav-spec-badge {
+  background: var(--sidebar-active);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.nav-spec-title { font-size: 12px; font-weight: 600; color: #e0f0e0; flex: 1; line-height: 1.3; }
+.nav-spec-arrow { font-size: 10px; color: rgba(200,223,200,0.5); transition: transform 0.2s; }
+.nav-spec-header.open .nav-spec-arrow { transform: rotate(90deg); }
+
+.nav-sub {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.nav-sub.open { max-height: 800px; }
+
+.nav-sub a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px 7px 20px;
+  color: rgba(200,223,200,0.75);
+  text-decoration: none;
+  font-size: 12px;
+  border-left: 3px solid transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-sub a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+.nav-sub a.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-left-color: #7ec87e;
+  font-weight: 600;
+}
+
+.nav-sub .nav-icon { font-size: 12px; opacity: 0.7; flex-shrink: 0; }
+
+.nav-spec-header.disabled { opacity: 0.45; cursor: default; pointer-events: none; }
+
+.sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 10.5px;
+  color: rgba(200,223,200,0.35);
+  line-height: 1.7;
+}
+
+/* ── Main ── */
+#main { margin-left: var(--sidebar-width); flex: 1; min-height: 100vh; }
+
+/* ── Spec panels ── */
+.spec-panel { display: none; }
+.spec-panel.active { display: block; }
+
+.doc-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 48px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.doc-header .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+.doc-header h1 {
+  font-size: 24px; font-weight: 700; color: var(--accent);
+  line-height: 1.3; margin-bottom: 10px;
+}
+
+.doc-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
+.doc-meta span { display: flex; align-items: center; gap: 4px; }
+
+.content-area { max-width: var(--content-max); margin: 0 auto; padding: 36px 48px 80px; }
+
+/* ── Shared section styles ── */
+.spec-section {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 28px; overflow: hidden;
+}
+
+.section-header {
+  padding: 16px 26px; background: #f9faf7;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+
+.section-num {
+  width: 28px; height: 28px; background: var(--accent); color: #fff;
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+
+.section-header h2 { font-size: 15.5px; font-weight: 700; color: var(--accent); flex: 1; }
+.section-body { padding: 22px 26px; }
+
+/* ── Tags ── */
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px; vertical-align: middle; margin-left: 4px;
+}
+.tag-line { background: var(--tag-line-bg); color: var(--tag-line); }
+.tag-internal { background: var(--tag-internal-bg); color: var(--tag-internal); }
+.tag-pending { background: var(--tag-pending-bg); color: var(--tag-pending); }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 14px 0; }
+th {
+  background: #f2f4ef; font-weight: 600; color: var(--accent);
+  padding: 10px 14px; text-align: left; border: 1px solid var(--border); font-size: 12.5px;
+}
+td { padding: 9px 14px; border: 1px solid var(--border); vertical-align: top; line-height: 1.65; }
+tr:nth-child(even) td { background: #fcfcfb; }
+td code, th code {
+  background: var(--code-bg); padding: 1px 6px; border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #c7254e;
+}
+
+/* ── Code blocks ── */
+pre {
+  background: #1e2a1e; color: #c8dfc8; border-radius: 8px;
+  padding: 16px 18px; overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7;
+  margin: 14px 0; border: 1px solid rgba(255,255,255,0.05);
+}
+.code-label {
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 5px; font-family: 'JetBrains Mono', monospace;
+}
+pre .key { color: #81c784; } pre .str { color: #ffcc80; }
+pre .num { color: #80cbc4; } pre .cmt { color: #6a8f6a; font-style: italic; }
+pre .kw  { color: #ce93d8; } pre .fn  { color: #90caf9; }
+
+/* ── Callouts ── */
+.callout {
+  border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-size: 13.5px;
+  line-height: 1.65; display: flex; gap: 10px; align-items: flex-start;
+}
+.callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.callout-body { flex: 1; }
+.callout-body strong { display: block; margin-bottom: 4px; font-size: 13px; }
+.callout-block  { background: #fff0f0; border: 2px solid #f5a5a5; color: #7a1a1a; }
+.callout-warning{ background: #fff8e1; border: 1px solid #ffe082; color: #6d4c00; }
+.callout-info   { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; }
+.callout-note   { background: #f3eeff; border: 1px solid #ce93d8; color: #4a148c; }
+.callout-success{ background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+
+/* ── Typography ── */
+h3 {
+  font-size: 14px; font-weight: 700; color: #2d4a2d;
+  margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e8f0e8;
+  display: flex; align-items: center; gap: 8px;
+}
+h3:first-child { margin-top: 0; }
+h4 { font-size: 13px; font-weight: 700; color: #3d5a3d; margin: 16px 0 8px; }
+p { margin-bottom: 10px; color: #333; font-size: 14px; }
+ul, ol { margin: 8px 0 12px 20px; font-size: 14px; line-height: 1.8; }
+li { margin-bottom: 3px; }
+strong { color: var(--text); }
+a { color: #1a73e8; }
+
+/* ── Spec 02 specific ── */
+.role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.badge-12cm { background: #e8f5e9; color: #2e7d32; }
+.badge-line { background: #e3f2fd; color: #1565c0; }
+.badge-newebpay { background: #fff3e0; color: #e65100; }
+.badge-block { background: #ffebee; color: #c62828; }
+.badge-ok   { background: #e8f5e9; color: #2e7d32; }
+.badge-warn { background: #fff8e1; color: #e65c00; }
+
+.scope-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 14px 0; }
+.scope-card { border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
+.scope-card .scope-title { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.scope-card ul { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.8; }
+.scope-line { background: #e3f2fd; } .scope-line .scope-title { color: #1565c0; }
+.scope-pay  { background: #fff3e0; } .scope-pay .scope-title  { color: #e65100; }
+.scope-12cm { background: #e8f5e9; } .scope-12cm .scope-title { color: #2e7d32; }
+
+.flow-box { background: #f9faf7; border: 1px solid var(--border); border-radius: 10px; padding: 22px 26px; margin: 14px 0; }
+.flow-step { display: flex; align-items: flex-start; gap: 14px; padding: 10px 0; position: relative; }
+.flow-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 38px; width: 2px; height: calc(100% - 14px); background: #c5d8c5; }
+.flow-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; position: relative; z-index: 1; }
+.dot-line { background: #e3f2fd; color: #1565c0; border: 2px solid #90caf9; }
+.dot-user { background: #f3eeff; color: #4a148c; border: 2px solid #ce93d8; }
+.dot-12cm { background: #e8f5e9; color: #2e7d32; border: 2px solid #a5d6a7; }
+.dot-pay  { background: #fff3e0; color: #e65100; border: 2px solid #ffcc80; }
+.flow-content { padding-top: 6px; flex: 1; }
+.flow-content .actor { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
+.flow-content .desc { font-size: 13.5px; color: #333; line-height: 1.5; }
+.flow-content .note { font-size: 12px; color: #888; margin-top: 3px; }
+
+.retry-row { display: flex; align-items: center; gap: 0; margin: 16px 0; overflow-x: auto; }
+.retry-node { text-align: center; flex-shrink: 0; }
+.retry-circle { width: 44px; height: 44px; border-radius: 50%; background: #fff8e1; border: 2px solid #ffcc80; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #6d4c00; margin: 0 auto 4px; }
+.retry-label { font-size: 11px; color: #888; }
+.retry-arrow { flex: 1; height: 2px; background: #ddd; position: relative; min-width: 40px; }
+.retry-arrow::after { content: attr(data-label); position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #e65100; white-space: nowrap; font-weight: 600; }
+
+.impl-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 13.5px; }
+.impl-item:last-child { border-bottom: none; }
+.impl-icon { width: 28px; height: 28px; background: var(--accent); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+.impl-body { flex: 1; }
+.impl-body strong { font-size: 13.5px; display: block; margin-bottom: 3px; }
+.impl-body p { font-size: 13px; color: #555; margin: 0; }
+
+/* ── Spec 03 specific ── */
+.flow-svg-wrap { background: #f9faf7; border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; }
+.condition-list { background: #f0f7f0; border: 1px solid #b2dfb2; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+.condition-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 13.5px; }
+.condition-item:not(:last-child) { border-bottom: 1px solid #d4ecd4; }
+.check-icon { width: 20px; height: 20px; background: #2e7d32; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+.format-box { background: #1e2a1e; color: #c8dfc8; border-radius: 8px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 12px 0; }
+.format-box .label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #6a8f6a; margin-bottom: 6px; }
+.format-box .pattern { color: #81c784; margin-bottom: 8px; }
+.format-box .example { color: #ffcc80; }
+.status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.badge-err2 { background: #ffebee; color: #c62828; }
+.account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.account-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #fcfcfb; }
+.account-card .plan-label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.account-card .plan-name { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.account-card p { font-size: 13px; margin-bottom: 0; color: #555; }
+
+/* ── Spec 04 specific ── */
+.api-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+.api-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.api-card-header { background: #f2f4ef; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+.api-type-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.3px; }
+.badge-async { background: #e3f2fd; color: #1565c0; }
+.badge-sync  { background: #e8f5e9; color: #2e7d32; }
+.api-card-header code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #1a1a1a; font-weight: 600; }
+.api-card-body { padding: 10px 14px; font-size: 13px; color: #555; }
+
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+.role-card { border-radius: 8px; padding: 18px; border: 2px solid; }
+.role-admin    { border-color: #90caf9; background: #e3f2fd; }
+.role-operator { border-color: #ffcc80; background: #fff8e1; }
+.role-card .role-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.role-admin .role-name    { color: #1565c0; }
+.role-operator .role-name { color: #e65100; }
+.role-card .role-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.role-card .perm-list { list-style: none; margin: 0; padding: 0; }
+.role-card .perm-item { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.05); line-height: 1.5; }
+.role-card .perm-item:last-child { border-bottom: none; }
+.perm-ok { color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+.perm-no { color: #c62828; font-weight: 700; flex-shrink: 0; }
+
+.env-staging { background: #fff3e0; color: #e65100; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.env-prod    { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+
+.browser-row { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+.browser-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 13.5px; min-width: 200px; }
+.browser-icon { font-size: 22px; }
+.browser-name { font-weight: 600; font-size: 13px; }
+.browser-note { font-size: 11.5px; color: var(--text-muted); }
+.support-full    { border-left: 4px solid #2e7d32; }
+.support-partial { border-left: 4px solid #e65100; }
+
+.sandbox-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13.5px; }
+.sandbox-item:last-child { border-bottom: none; }
+.sandbox-attr { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #c7254e; background: var(--code-bg); padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+
+
+/* ── Download button ── */
+.doc-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #2d4a2d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.doc-download-btn:hover { background: #3d6b3d; color: #fff; }
+.doc-download-btn svg { flex-shrink: 0; }
+.doc-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.doc-header-row h1 { flex: 1; min-width: 0; }
+
+.scroll-target { scroll-margin-top: 80px; }
+
+@media (max-width: 900px) {
+  #sidebar { width: 220px; }
+  #main { margin-left: 220px; }
+  .doc-header, .content-area { padding-left: 24px; padding-right: 24px; }
+  .scope-grid, .api-grid, .role-grid { grid-template-columns: 1fr; }
+}
+
+/#panel-01 * ── Spec 01 Invoice styles ── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --green-dark: #2d4a2d;
+    --green-mid: #3d6b3d;
+    --green-light: #e8f0e8;
+    --green-accent: #4a7c4a;
+    --green-hover: #f0f5f0;
+    --border: #d4e0d4;
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a5a4a;
+    --text-muted: #7a8a7a;
+    --bg: #ffffff;
+    --bg-page: #f7faf7;
+    --table-head: #3d6b3d;
+    --table-stripe: #f4f8f4;
+    --code-bg: #f0f4f0;
+    --code-border: #c8d8c8;
+    --note-bg: #f0f7f0;
+    --note-border: #4a7c4a;
+    --warning-bg: #fffbf0;
+    --warning-border: #c8a832;
+    --tag-internal-bg: #fff3e0;
+    --tag-internal: #b45309;
+    --tag-line-bg: #e8f0fe;
+    --tag-line: #1a56db;
+    --sidebar-w: 240px;
+  }#panel-01 #panel-01 body {
+    font-family: -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    background: var(--bg-page);
+    display: flex;
+    min-height: 100vh;
+  }#panel-01 /* ── Sidebar ── */
+#panel-01 #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--green-dark);
+    color: #fff;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }#panel-01 #panel-01 #sidebar-title {
+    padding: 20px 18px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    line-height: 1.4;
+  }#panel-01 #panel-01 #sidebar-title span {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.6;
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }#panel-01 #panel-01 #sidebar nav { padding: 12px 0 24px; flex: 1; }#panel-01 #panel-01 .nav-group-label {
+    padding: 14px 18px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }#panel-01 #panel-01 .nav-item {
+    display: block;
+    padding: 7px 18px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.82);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    border-left: 3px solid transparent;
+  }#panel-01 #panel-01 .nav-item:hover, #panel-01 #panel-01 .nav-item.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-left-color: rgba(255,255,255,0.6);
+  }#panel-01 #panel-01 .nav-item.sub {
+    padding-left: 30px;
+    font-size: 12.5px;
+    opacity: 0.85;
+  }#panel-01 /* ── Main ── */
+#panel-01 #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0 0 80px;
+  }#panel-01 /* ── Top actions bar ── */
+#panel-01 #topbar {
+    position: sticky;
+    top: 0;
+    background: rgba(247,250,247,0.95);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 48px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    z-index: 50;
+  }#panel-01 #panel-01 .btn-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }#panel-01 #panel-01 .btn-dl:hover { border-color: var(--green-accent); color: var(--green-accent); }#panel-01 /* ── Content ── */
+#panel-01 #content { padding: 40px 48px; max-width: 900px; }#panel-01 #panel-01 section { margin-bottom: 56px; scroll-margin-top: 58px; }#panel-01 #panel-01 h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }#panel-01 #panel-01 .meta-line {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }#panel-01 #panel-01 .section-divider {
+    border: none;
+    border-top: 2px solid var(--green-dark);
+    margin: 0 0 24px;
+  }#panel-01 #panel-01 h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }#panel-01 #panel-01 h2 .section-num {
+    display: inline-block;
+    background: var(--green-dark);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }#panel-01 #panel-01 h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 24px 0 12px;
+    scroll-margin-top: 58px;
+  }#panel-01 #panel-01 p { margin-bottom: 12px; color: var(--text-secondary); }#panel-01 /* Tags */
+#panel-01 .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+  }#panel-01 #panel-01 .tag-line { background: var(--tag-line-bg); color: var(--tag-line); }#panel-01 #panel-01 .tag-internal { background: var(--tag-internal-bg); color: var(--tag-internal); }#panel-01 /* Tables */
+#panel-01 .table-wrap { overflow-x: auto; margin-bottom: 20px; }#panel-01 #panel-01 table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }#panel-01 #panel-01 thead tr { background: var(--table-head); }#panel-01 #panel-01 thead th {
+    padding: 10px 14px;
+    text-align: left;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+  }#panel-01 #panel-01 tbody tr:nth-child(even) { background: var(--table-stripe); }#panel-01 #panel-01 tbody tr:hover { background: var(--green-hover); }#panel-01 #panel-01 td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 td:first-child { font-weight: 500; color: var(--text-primary); white-space: nowrap; }#panel-01 #panel-01 .badge-y {
+    display: inline-block;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 #panel-01 .badge-n {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 #panel-01 .badge-cond {
+    display: inline-block;
+    background: #fef9c3;
+    color: #854d0e;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 /* Code */
+#panel-01 code {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #2d4a2d;
+  }#panel-01 #panel-01 pre {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-left: 4px solid var(--green-accent);
+    border-radius: 6px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+  }#panel-01 /* Callouts */
+#panel-01 .callout {
+    border-left: 4px solid var(--note-border);
+    background: var(--note-bg);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 .callout-warning {
+    border-left-color: var(--warning-border);
+    background: var(--warning-bg);
+  }#panel-01 #panel-01 .callout strong { color: var(--text-primary); }#panel-01 /* Note for internal design */
+#panel-01 .note-internal {
+    border: 1px dashed var(--tag-internal);
+    background: var(--tag-internal-bg);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--tag-internal);
+    margin-bottom: 20px;
+  }#panel-01 /* Flow diagram */
+#panel-01 .flow {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }#panel-01 #panel-01 .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    position: relative;
+  }#panel-01 #panel-01 .flow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    bottom: -8px;
+    width: 2px;
+    background: var(--border);
+  }#panel-01 #panel-01 .flow-dot {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 50%;
+    background: var(--green-dark);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 1;
+  }#panel-01 #panel-01 .flow-dot.branch { background: var(--green-accent); }#panel-01 #panel-01 .flow-dot.end { background: #166534; }#panel-01 #panel-01 .flow-text {
+    padding-top: 5px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 .flow-text strong { color: var(--text-primary); }#panel-01 #panel-01 .flow-branch {
+    margin-left: 42px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }#panel-01 #panel-01 .flow-branch::before { content: '├─ '; color: var(--text-muted); }#panel-01 #panel-01 .flow-branch:last-child::before { content: '└─ '; color: var(--text-muted); }#panel-01 /* List */
+#panel-01 ul.spec-list {
+    padding-left: 20px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }#panel-01 #panel-01 ul.spec-list li { margin-bottom: 7px; }#panel-01 /* Prototype embed section */
+#panel-01 .prototype-wrap {
+    border: 2px solid var(--green-accent);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }#panel-01 #panel-01 .prototype-header {
+    background: var(--green-dark);
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }#panel-01 #panel-01 .prototype-body {
+    background: #fff;
+    padding: 28px 32px;
+  }
+
+  /* Responsive tweak */
+  @media (max-width: 768px) {#panel-01 #panel-01 #sidebar { display: none; }#panel-01 #panel-01 #main { margin-left: 0; }#panel-01 #panel-01 #content { padding: 24px 20px; }
+  }
+
+</style>
+</head>
+<body>
+<!-- ── Spec 04 Panel ── -->
+  <div style="display:block;" id="panel-04">
+    <header class="doc-header">
+      <div class="breadcrumb">LINE OA Plus DX Phase 2 › 開發規格文件</div>
+      <div class="doc-header-row">
+        <h1>Spec 04 · 前端 SDK 串接與角色權限控管<br><small style="font-size:15px;font-weight:400;color:#555;">Frontend SDK Integration & Role-Based Access Control</small></h1>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <button class="doc-download-btn" onclick="downloadMD('04')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 下載 .md
+          </button>
+          <a class="doc-download-btn" style="background:#1a5fa8;text-decoration:none;" href="assets/LINE_OA_Plus_TW_DX_Solution_v2.0.0.pdf" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 技術文件 v2.0.0
+          </a>
+          <a class="doc-download-btn" style="background:#1a5fa8;text-decoration:none;" href="assets/LINE_OA_Plus_TW_DX_Solution_Phase2_Product_Guide.pdf" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Product Guide
+          </a>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <span>📅 2026-05-21</span><span>📌 版本 1.0</span>
+        <span>📚 技術文件 v2.0.0 §SDK ／ Product Guide §5</span>
+      </div>
+    </header>
+    <div class="content-area">
+<!-- ── 1. 功能概述 ── -->
+    
+    <div style="margin: 32px 0 8px; padding: 8px 0 8px; border-bottom: 2px solid #e8f0e8;">
+      <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#7a9a7a;">功能規格</span>
+    </div>
+
+    <div class="spec-section scroll-target" id="s04-overview">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <h2>功能概述</h2>
+      </div>
+      <div class="section-body">
+        <p>12CM 的 Admin Plugin 透過 LINE OA Plus TW SDK（<code>dx</code> 物件）取得當前登入使用者的商戶資訊、Plugin 狀態及角色，並根據這些資訊動態調整 UI 語言、功能可見範圍與操作權限，確保 OA Plus 與 12CM 系統之間的角色體驗一致。</p>
+
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ️</span>
+          <div class="callout-body">
+            <strong>本文件範疇</strong>
+            涵蓋：SDK 載入、前端 API 用法、角色判斷邏輯、CSRF 安全機制、DX-JWT 後端驗證、API 請求路由規則，以及 UI/UX、沙盒、CSP 等實作要點。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. SDK 載入 ── -->
+
+    <div class="spec-section scroll-target" id="s04-roles">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <h2>角色控管 <span class="tag tag-line">LINE 規格</span> <span class="tag tag-internal">內部邏輯</span></h2>
+      </div>
+      <div class="section-body">
+
+        <h3>6.1 LINE 規範的角色邊界 <span class="tag tag-line">LINE 規格</span></h3>
+
+        <p>LINE OA Plus 定義兩種角色，<strong>僅規範「訂閱與帳務」相關操作的權限邊界</strong>，其他功能的權限由 12CM 自行決定。</p>
+
+        <div class="role-grid">
+          <div class="role-card role-admin">
+            <div class="role-name">Admin　管理者</div>
+            <div class="role-desc">訂閱與帳務操作的全部權限</div>
+            <ul class="perm-list">
+              <li class="perm-item"><span class="perm-ok">✓</span>發起訂閱付費版</li>
+              <li class="perm-item"><span class="perm-ok">✓</span>更新付款方式</li>
+              <li class="perm-item"><span class="perm-ok">✓</span>取消 / 恢復訂閱</li>
+              <li class="perm-item"><span class="perm-ok">✓</span>查看訂閱清單與扣款紀錄</li>
+            </ul>
+          </div>
+          <div class="role-card role-operator">
+            <div class="role-name">Operator　操作員</div>
+            <div class="role-desc">訂閱與帳務僅可查看，不可變更</div>
+            <ul class="perm-list">
+              <li class="perm-item"><span class="perm-ok">✓</span>查看訂閱清單</li>
+              <li class="perm-item"><span class="perm-ok">✓</span>查看訂閱狀態</li>
+              <li class="perm-item"><span class="perm-ok">✓</span>查看扣款紀錄</li>
+              <li class="perm-item"><span class="perm-no">✗</span>發起訂閱</li>
+              <li class="perm-item"><span class="perm-no">✗</span>修改付款資料</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ️</span>
+          <div class="callout-body">
+            <strong>LINE 只提供角色資訊，不規範 12CM 功能邊界</strong>
+            Product Guide §5 說明：LINE 透過 SDK 提供角色資訊「供 Partner 參考」，Partner 可自行決定如何對應至自身系統的權限設計。訂閱與帳務以外的功能（如商品管理、訂單查看等），LINE 沒有限制，由 12CM 自行定義 Admin 與 Operator 各自能操作的範圍。
+          </div>
+        </div>
+
+        <div class="callout callout-warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>角色驗證前後端都需實作</strong>
+            前端負責根據角色控制 UI 可見性與操作入口（show/hide）；後端 API 同樣需驗證角色，防止 Operator 繞過前端直接呼叫受限 API。兩層驗證缺一不可。
+          </div>
+        </div>
+
+        <h3>6.2 12CM 系統的 Admin / Operator 權限設計 <span class="tag tag-internal">內部邏輯</span></h3>
+
+        <p style="font-size:13.5px;color:#555;margin-bottom:12px;">Admin 對所有模組具備完整權限（查看、新增、編輯、刪除）。Operator 所有模組均不可執行刪除操作。</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>功能模組</th>
+              <th style="text-align:center;">Admin</th>
+              <th style="text-align:center;">Operator</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>歡迎頁</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>會員權益</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>會員卡</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>集點卡</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>優惠券</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>儲值卡</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>會員管理</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>門店管理</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>下載區</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+            <tr>
+              <td>使用手冊</td>
+              <td style="text-align:center;color:#2e7d32;">查看 新增 編輯 刪除</td>
+              <td style="text-align:center;">
+                <span style="color:#2e7d32;">查看 新增 編輯</span>
+                <span style="color:#c62828;margin-left:6px;">✗ 刪除</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>6.3 角色判斷建議邏輯 <span class="tag tag-internal">內部邏輯</span></h3>
+        <pre><span class="cmt">// role 欄位來源待後續確認（請洽 LINE 技術窗口）</span>
+<span class="cmt">// 以下為預期實作邏輯，欄位名稱依確認結果調整</span>
+
+<span class="kw">if</span> (userRole === <span class="str">'ADMIN'</span>) {
+  <span class="fn">showSubscriptionControls</span>();   <span class="cmt">// 訂閱、取消、付款方式更新</span>
+  <span class="cmt">// + 12CM 自定義的 Admin 專屬功能</span>
+} <span class="kw">else</span> {
+  <span class="fn">hideSubscriptionControls</span>();
+  <span class="fn">showReadOnlyView</span>();           <span class="cmt">// 訂閱狀態唯讀</span>
+  <span class="cmt">// + 12CM 自定義的 Operator 可用功能</span>
+}</pre>
+      </div>
+    </div>
+
+    <!-- ── 7. CSRF ── -->
+
+    
+    <div style="margin: 32px 0 8px; padding: 8px 0 8px; border-bottom: 2px solid #e8f0e8;">
+      <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#7a9a7a;">SDK 串接 — 技術參考</span>
+    </div>
+
+    <div class="spec-section scroll-target" id="s04-sdk-load">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <h2>SDK 載入 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead><tr><th>環境</th><th>SDK URL</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="env-staging">Staging</span></td>
+              <td><code>https://vos.line-scdn.net/dx-sdk-staging/v2.0.0/bundle.min.js</code></td>
+            </tr>
+            <tr>
+              <td><span class="env-prod">Production</span></td>
+              <td><code>https://vos.line-scdn.net/dx-sdk/v2.0.0/bundle.min.js</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="code-label">載入方式</div>
+        <pre>&lt;<span class="kw">script</span> <span class="key">src</span>=<span class="str">"https://vos.line-scdn.net/dx-sdk-staging/v2.0.0/bundle.min.js"</span> <span class="key">async</span>&gt;&lt;/<span class="kw">script</span>&gt;</pre>
+
+        <div class="callout callout-warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            SDK 以 <code>async</code> 方式載入，呼叫 <code>dx.getUser()</code> 等非同步函式前須確保 SDK 已初始化完成。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. API 一覽 ── -->
+
+    <div class="spec-section scroll-target" id="s04-api-overview">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <h2>API 一覽 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <div class="api-grid">
+          <div class="api-card">
+            <div class="api-card-header">
+              <span class="api-type-badge badge-async">Async</span>
+              <code>dx.getUser()</code>
+            </div>
+            <div class="api-card-body">取得商戶 ID 與語言設定，回傳 Promise</div>
+          </div>
+          <div class="api-card">
+            <div class="api-card-header">
+              <span class="api-type-badge badge-sync">Sync</span>
+              <code>dx.getPluginInfo()</code>
+            </div>
+            <div class="api-card-body">取得 Plugin 方案等級與啟用狀態，同步回傳 Object</div>
+          </div>
+          <div class="api-card">
+            <div class="api-card-header">
+              <span class="api-type-badge badge-sync">Sync</span>
+              <code>dx.security.getCSRFToken()</code>
+            </div>
+            <div class="api-card-body">取得 CSRF Token，用於 POST / PUT / DELETE</div>
+          </div>
+          <div class="api-card">
+            <div class="api-card-header">
+              <span class="api-type-badge badge-sync">Sync</span>
+              <code>dx.security.getCSRFTokenHeaderName()</code>
+            </div>
+            <div class="api-card-body">取得 CSRF Header 名稱，固定回傳 <code>DX-CSRF-TOKEN</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4. getUser ── -->
+
+    <div class="spec-section scroll-target" id="s04-getUser">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <h2><code>dx.getUser()</code> — 商戶資訊 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+
+        <h3>回傳欄位</h3>
+        <table>
+          <thead><tr><th>欄位</th><th>類型</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>merchantId</code></td>
+              <td>String</td>
+              <td>商戶 ID（例如 <code>@abc1234</code>）</td>
+            </tr>
+            <tr>
+              <td><code>language</code></td>
+              <td>String</td>
+              <td>使用者語系，支援：<code>zh-TW</code>、<code>en</code>、<code>ja</code>、<code>ko</code>、<code>th</code>、<code>id</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>使用範例</h3>
+        <pre><span class="fn">dx</span>.<span class="fn">getUser</span>()
+  .<span class="fn">then</span>((<span class="key">user</span>) => {
+    <span class="kw">const</span> merchantId = user.<span class="key">merchantId</span>;
+    <span class="kw">const</span> language   = user.<span class="key">language</span>;
+    <span class="cmt">// 根據 language 切換 UI 語系</span>
+    i18n.<span class="fn">setLanguage</span>(language);
+  })
+  .<span class="fn">catch</span>((<span class="key">err</span>) => {
+    console.<span class="fn">error</span>(<span class="str">'getUser error:'</span>, err.<span class="key">code</span>, err.<span class="key">message</span>);
+  });</pre>
+
+        <h3>錯誤處理</h3>
+        <table>
+          <thead><tr><th>Error Code</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td><code>TIMEOUT</code></td><td>SDK 在 5,000 ms 內未收到 OAP 回應</td></tr>
+            <tr><td><code>EXCEPTION</code></td><td>非預期 runtime 錯誤</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 5. getPluginInfo ── -->
+
+    <div class="spec-section scroll-target" id="s04-getPluginInfo">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <h2><code>dx.getPluginInfo()</code> — Plugin 狀態 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+
+        <h3>回傳欄位</h3>
+        <table>
+          <thead><tr><th>欄位</th><th>類型</th><th>可能值</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>level</code></td>
+              <td>String</td>
+              <td><code>FREE</code> / <code>PREMIUM</code></td>
+              <td>目前方案等級</td>
+            </tr>
+            <tr>
+              <td><code>activatedStatus</code></td>
+              <td>String</td>
+              <td><code>ACTIVATED</code> / <code>ACTIVATION_INITIATED</code> / <code>ACTIVATION_FAILED</code></td>
+              <td>Plugin 啟用狀態</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>使用範例</h3>
+        <pre><span class="kw">const</span> pluginInfo = <span class="fn">dx</span>.<span class="fn">getPluginInfo</span>();
+<span class="kw">const</span> level  = pluginInfo.<span class="key">level</span>;            <span class="cmt">// "FREE" | "PREMIUM"</span>
+<span class="kw">const</span> status = pluginInfo.<span class="key">activatedStatus</span>;   <span class="cmt">// "ACTIVATED" | ...</span>
+
+<span class="kw">if</span> (level === <span class="str">'PREMIUM'</span> && status === <span class="str">'ACTIVATED'</span>) {
+  <span class="fn">showPremiumFeatures</span>();   <span class="cmt">// 顯示付費功能區塊</span>
+} <span class="kw">else</span> {
+  <span class="fn">showUpgradePrompt</span>();     <span class="cmt">// 顯示升級提示</span>
+}</pre>
+
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ️</span>
+          <div class="callout-body">
+            <code>getPluginInfo()</code> 為同步呼叫，不需要 <code>.then()</code>，可在頁面初始化時直接使用。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 6. 角色控管 ── -->
+
+    <div class="spec-section scroll-target" id="s04-csrf">
+      <div class="section-header">
+        <div class="section-num">7</div>
+        <h2>CSRF 安全機制 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <p>所有非 GET 請求（<code>POST</code> / <code>PUT</code> / <code>DELETE</code>）<strong>必須</strong>帶入 CSRF Token：</p>
+
+        <pre><span class="kw">const</span> csrfToken      = dx.security.<span class="fn">getCSRFToken</span>();
+<span class="kw">const</span> csrfHeaderName = dx.security.<span class="fn">getCSRFTokenHeaderName</span>(); <span class="cmt">// "DX-CSRF-TOKEN"</span>
+
+<span class="fn">fetch</span>(<span class="str">'/api/your-endpoint'</span>, {
+  <span class="key">method</span>: <span class="str">'POST'</span>,
+  <span class="key">headers</span>: {
+    <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+    [csrfHeaderName]: csrfToken
+  },
+  <span class="key">body</span>: JSON.<span class="fn">stringify</span>(payload)
+});</pre>
+
+        <div class="callout callout-warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            缺少 CSRF Token 的非 GET 請求將被拒絕。每次操作前都需重新取得最新 Token，不應快取舊 Token。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 8. DX-JWT ── -->
+
+    <div class="spec-section scroll-target" id="s04-jwt">
+      <div class="section-header">
+        <div class="section-num">8</div>
+        <h2>DX-JWT 後端驗證 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <p>OA Plus 反向代理會在每個請求的 cookie 中注入 <code>dx-jwt</code>，12CM 後端須驗證此 JWT。</p>
+
+        <h3>JWT 結構</h3>
+        <div class="code-label">Header</div>
+        <pre>{ <span class="key">"alg"</span>: <span class="str">"HS256"</span>, <span class="key">"typ"</span>: <span class="str">"JWT"</span> }</pre>
+
+        <div class="code-label" style="margin-top:12px;">Payload</div>
+        <pre>{
+  <span class="key">"pluginId"</span>: <span class="str">"12345"</span>,
+  <span class="key">"merchantId"</span>: <span class="str">"123456"</span>,
+  <span class="key">"pluginInfo"</span>: {
+    <span class="key">"level"</span>: <span class="str">"FREE"</span>,
+    <span class="key">"activatedStatus"</span>: <span class="str">"ACTIVATED"</span>
+  },
+  <span class="key">"iat"</span>: <span class="num">1717023000</span>,
+  <span class="key">"exp"</span>: <span class="num">1717026600</span>
+  <span class="cmt">// role 欄位是否存在待 LINE 技術窗口確認</span>
+}</pre>
+
+        <h3>驗簽方式</h3>
+        <p>使用 LINE 提供的 <strong>Secret of Admin Plugin</strong> 以 <strong>HMAC-SHA256</strong> 驗簽。</p>
+
+        <table>
+          <thead><tr><th>項目</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td>演算法</td><td>HMAC-SHA256</td></tr>
+            <tr><td>Secret 來源</td><td>LINE 核發的 Secret of Admin Plugin（詳見 Phase 2 對接清單）</td></tr>
+            <tr><td>Token 有效期</td><td>60 分鐘（<code>exp</code> 欄位）</td></tr>
+            <tr><td>注入方式</td><td>反向代理自動注入至 <code>dx-jwt</code> cookie</td></tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+    <!-- ── 9. 請求路由 ── -->
+
+    
+    <div style="margin: 32px 0 8px; padding: 8px 0 8px; border-bottom: 2px solid #e8f0e8;">
+      <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#7a9a7a;">環境限制 — 技術參考</span>
+    </div>
+
+    <div class="spec-section scroll-target" id="s04-routing">
+      <div class="section-header">
+        <div class="section-num">9</div>
+        <h2>API 請求路由規則 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <ul>
+          <li>所有 API 請求<strong>必須</strong>透過反向代理發送，不得直接呼叫 12CM 後端域名</li>
+          <li>請求 URL 必須使用與 Plugin 頁面<strong>相同的 domain</strong></li>
+        </ul>
+
+        <pre><span class="cmt">// Plugin 頁面 URL</span>
+https://testplugin-dx-staging.line-apps.com/
+
+<span class="cmt">// API 請求 URL（同 domain）</span>
+https://testplugin-dx-staging.line-apps.com/api/your-endpoint</pre>
+
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ️</span>
+          <div class="callout-body">
+            身份驗證依賴 plugin domain 上的 <code>dx-jwt</code> cookie，因此 API 呼叫必須透過 plugin domain，不能直接打 12CM 後端 domain。
+          </div>
+        </div>
+
+        <h3>3xx 重定向限制</h3>
+        <table>
+          <thead><tr><th>HTTP 狀態碼</th><th>反向代理行為</th></tr></thead>
+          <tbody>
+            <tr><td><code>304 Not Modified</code></td><td>✅ 允許通過</td></tr>
+            <tr><td>其他 3xx</td><td>❌ 封鎖，前端收到 <code>502 Bad Gateway</code></td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            若服務設計依賴 3xx redirect（例如登入導頁），須改為前端 JS 主動導向或 API 回傳 redirect URL 的方式實作。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 10. UI/UX ── -->
+
+    <div class="spec-section scroll-target" id="s04-uiux">
+      <div class="section-header">
+        <div class="section-num">10</div>
+        <h2>UI/UX 實作要點 <span class="tag tag-internal">內部邏輯</span></h2>
+      </div>
+      <div class="section-body">
+
+        <h3>10.1 語系切換</h3>
+        <ul>
+          <li>呼叫 <code>dx.getUser()</code> 取得 <code>language</code> 後，動態切換介面語系</li>
+          <li>支援語系：<code>zh-TW</code>（預設）、<code>en</code></li>
+        </ul>
+
+        <h3>10.2 響應式設計</h3>
+        <table>
+          <thead><tr><th>裝置</th><th>規格</th></tr></thead>
+          <tbody>
+            <tr><td>Mobile</td><td>手機裝置</td></tr>
+            <tr><td>Tablet</td><td>≥ 768px</td></tr>
+            <tr><td>Desktop</td><td>桌面瀏覽器</td></tr>
+          </tbody>
+        </table>
+
+        <h3>10.3 瀏覽器支援</h3>
+        <div class="browser-row">
+          <div class="browser-card support-full">
+            <div class="browser-icon">🟢</div>
+            <div>
+              <div class="browser-name">Chrome 119+</div>
+              <div class="browser-note">完整支援</div>
+            </div>
+          </div>
+          <div class="browser-card support-partial">
+            <div class="browser-icon">🟡</div>
+            <div>
+              <div class="browser-name">Safari</div>
+              <div class="browser-note">部分支援，可能需停用「防止跨站追蹤」<br>支援程度因 Partner CMS 而異</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 11. Sandbox ── -->
+
+    <div class="spec-section scroll-target" id="s04-sandbox">
+      <div class="section-header">
+        <div class="section-num">11</div>
+        <h2>iFrame 沙盒限制 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <p>Admin Plugin 在 iFrame 中執行，sandbox 允許以下能力：</p>
+
+        <div class="sandbox-item">
+          <span class="sandbox-attr">allow-same-origin</span>
+          <span>允許同源 cookie、localStorage、IndexedDB 操作</span>
+        </div>
+        <div class="sandbox-item">
+          <span class="sandbox-attr">allow-scripts</span>
+          <span>允許執行 JavaScript 腳本</span>
+        </div>
+
+        <div class="callout callout-warning" style="margin-top:14px;">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            Sandbox 未列出的能力（如 <code>allow-forms</code>、<code>allow-popups</code>）均不可使用，設計 UI 時需注意。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 12. CSP ── -->
+
+    <div class="spec-section scroll-target" id="s04-csp">
+      <div class="section-header">
+        <div class="section-num">12</div>
+        <h2>CSP 合規要求 <span class="tag tag-line">LINE 規格</span></h2>
+      </div>
+      <div class="section-body">
+        <p>12CM Plugin 頁面須遵守平台的 Content Security Policy。LINE 強制執行的 CSP 指令如下：</p>
+
+        <table>
+          <thead><tr><th>指令</th><th>限制</th></tr></thead>
+          <tbody>
+            <tr><td><code>script-src</code></td><td><code>'self'</code> + 白名單可信來源</td></tr>
+            <tr><td><code>style-src</code></td><td><code>'self' 'unsafe-inline'</code> + 白名單可信來源</td></tr>
+            <tr><td><code>img-src</code></td><td><code>'self'</code> + 白名單可信來源</td></tr>
+            <tr><td><code>media-src</code></td><td><code>'self'</code>（同源）</td></tr>
+            <tr><td><code>font-src</code></td><td><code>'self'</code> + 白名單可信來源</td></tr>
+          </tbody>
+        </table>
+
+        <ul style="margin-top:14px;">
+          <li>動態注入的 <code>&lt;script&gt;</code> 與 <code>&lt;link&gt;</code> 標籤須包含有效 <strong>nonce</strong>，否則將被 CSP 封鎖</li>
+          <li>所有外部資源須在 <strong>ACL（Access Control List）</strong>中明確定義，未列入的資源將被封鎖</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    </div>
+  </div>
+
+</main>
+<script>
+const MD_04 = "# \u958b\u767c\u898f\u683c\u6587\u4ef6 #04\uff1a\u524d\u7aef SDK \u4e32\u63a5\u8207\u89d2\u8272\u6b0a\u9650\u63a7\u7ba1\n\n**\u7248\u672c**\uff1a1.1 | **\u65e5\u671f**\uff1a2026-05-22 | **\u4f9d\u64da\u6587\u4ef6**\uff1a\u6280\u8853\u6587\u4ef6 v2.0.0 \u00a7 LINE OA Plus TW SDK\uff1bPhase 2 Product Guide \u00a7 5\n\n---\n\n## \u529f\u80fd\u898f\u683c\n\n---\n\n## 1. \u529f\u80fd\u6982\u8ff0\n\n12CM \u7684 Admin Plugin \u900f\u904e LINE OA Plus TW SDK\uff08`dx` \u7269\u4ef6\uff09\u53d6\u5f97\u7576\u524d\u767b\u5165\u4f7f\u7528\u8005\u7684\u5546\u6236\u8cc7\u8a0a\u3001Plugin \u72c0\u614b\u53ca\u89d2\u8272\uff0c\u4e26\u6839\u64da\u9019\u4e9b\u8cc7\u8a0a\u52d5\u614b\u8abf\u6574 UI \u8a9e\u8a00\u3001\u529f\u80fd\u53ef\u898b\u7bc4\u570d\u8207\u64cd\u4f5c\u6b0a\u9650\uff0c\u78ba\u4fdd OA Plus \u8207 12CM \u7cfb\u7d71\u4e4b\u9593\u7684\u89d2\u8272\u9ad4\u9a57\u4e00\u81f4\u3002\n\n---\n\n## 2. \u89d2\u8272\u63a7\u7ba1\n\n### 2.1 LINE \u898f\u7bc4\u7684\u89d2\u8272\u908a\u754c\n\nLINE OA Plus \u5b9a\u7fa9\u5169\u7a2e\u89d2\u8272\uff0c**\u50c5\u898f\u7bc4\u300c\u8a02\u95b1\u8207\u5e33\u52d9\u300d\u76f8\u95dc\u64cd\u4f5c\u7684\u6b0a\u9650\u908a\u754c**\uff0c\u5176\u4ed6\u529f\u80fd\u7684\u6b0a\u9650\u7531 12CM \u81ea\u884c\u6c7a\u5b9a\u3002\n\n| \u89d2\u8272 | \u8a02\u95b1\u8207\u5e33\u52d9\u64cd\u4f5c |\n|------|-------------|\n| **Admin** \u7ba1\u7406\u8005 | \u767c\u8d77\u8a02\u95b1\u3001\u66f4\u65b0\u4ed8\u6b3e\u65b9\u5f0f\u3001\u53d6\u6d88/\u6062\u5fa9\u8a02\u95b1\u3001\u67e5\u770b\u8a02\u95b1\u6e05\u55ae\u8207\u6263\u6b3e\u7d00\u9304 |\n| **Operator** \u64cd\u4f5c\u54e1 | \u50c5\u53ef\u67e5\u770b\u8a02\u95b1\u6e05\u55ae\u3001\u8a02\u95b1\u72c0\u614b\u3001\u6263\u6b3e\u7d00\u9304\uff1b\u4e0d\u53ef\u767c\u8d77\u8a02\u95b1\u3001\u4e0d\u53ef\u4fee\u6539\u4ed8\u6b3e\u8cc7\u6599 |\n\n> LINE \u900f\u904e SDK \u63d0\u4f9b\u89d2\u8272\u8cc7\u8a0a\u300c\u4f9b Partner \u53c3\u8003\u300d\uff0c\u8a02\u95b1\u8207\u5e33\u52d9\u4ee5\u5916\u7684\u529f\u80fd\u7531 12CM \u81ea\u884c\u5b9a\u7fa9 Admin \u8207 Operator \u5404\u81ea\u80fd\u64cd\u4f5c\u7684\u7bc4\u570d\u3002\n\n> \u26a0\ufe0f **\u89d2\u8272\u9a57\u8b49\u524d\u5f8c\u7aef\u90fd\u9700\u5be6\u4f5c**\uff1a\u524d\u7aef\u8ca0\u8cac\u6839\u64da\u89d2\u8272\u63a7\u5236 UI \u53ef\u898b\u6027\uff08show/hide\uff09\uff1b\u5f8c\u7aef API \u540c\u6a23\u9700\u9a57\u8b49\u89d2\u8272\uff0c\u9632\u6b62 Operator \u7e5e\u904e\u524d\u7aef\u76f4\u63a5\u547c\u53eb\u53d7\u9650 API\u3002\u5169\u5c64\u9a57\u8b49\u7f3a\u4e00\u4e0d\u53ef\u3002\n\n### 2.2 12CM \u7cfb\u7d71\u7684 Admin / Operator \u6b0a\u9650\u8a2d\u8a08\n\nAdmin \u5c0d\u6240\u6709\u6a21\u7d44\u5177\u5099\u5b8c\u6574\u6b0a\u9650\uff08\u67e5\u770b\u3001\u65b0\u589e\u3001\u7de8\u8f2f\u3001\u522a\u9664\uff09\u3002Operator \u6240\u6709\u6a21\u7d44\u5747\u4e0d\u53ef\u57f7\u884c\u522a\u9664\u64cd\u4f5c\u3002\n\n| \u529f\u80fd\u6a21\u7d44 | Admin | Operator |\n|---------|-------|---------|\n| \u6b61\u8fce\u9801 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u6703\u54e1\u6b0a\u76ca | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u6703\u54e1\u5361 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u96c6\u9ede\u5361 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u512a\u60e0\u5238 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u5132\u503c\u5361 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u6703\u54e1\u7ba1\u7406 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u9580\u5e97\u7ba1\u7406 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u4e0b\u8f09\u5340 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n| \u4f7f\u7528\u624b\u518a | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f \u522a\u9664 | \u67e5\u770b \u65b0\u589e \u7de8\u8f2f |\n\n### 2.3 \u89d2\u8272\u5224\u65b7\u5efa\u8b70\u908f\u8f2f\n\n```javascript\n// role \u6b04\u4f4d\u4f86\u6e90\u5f85\u5f8c\u7e8c\u78ba\u8a8d\uff08\u8acb\u6d3d LINE \u6280\u8853\u7a97\u53e3\uff09\nif (userRole === 'ADMIN') {\n  showSubscriptionControls(); // \u8a02\u95b1\u3001\u53d6\u6d88\u3001\u4ed8\u6b3e\u65b9\u5f0f\u66f4\u65b0\n  // + 12CM \u81ea\u5b9a\u7fa9\u7684 Admin \u5c08\u5c6c\u529f\u80fd\n} else {\n  hideSubscriptionControls();\n  showReadOnlyView();          // \u8a02\u95b1\u72c0\u614b\u552f\u8b80\n  // + 12CM \u81ea\u5b9a\u7fa9\u7684 Operator \u53ef\u7528\u529f\u80fd\n}\n```\n\n---\n\n## SDK \u4e32\u63a5 \u2014 \u6280\u8853\u53c3\u8003\n\n---\n\n## 3. SDK \u8f09\u5165\n\n| \u74b0\u5883 | URL |\n|------|-----|\n| Staging | `https://vos.line-scdn.net/dx-sdk-staging/v2.0.0/bundle.min.js` |\n| Production | `https://vos.line-scdn.net/dx-sdk/v2.0.0/bundle.min.js` |\n\n```html\n<\x73cript src=\"https://vos.line-scdn.net/dx-sdk-staging/v2.0.0/bundle.min.js\" async><\/\x73cript>\n```\n\n---\n\n## 4. API \u4e00\u89bd\n\n| \u51fd\u5f0f | \u985e\u578b | \u8aaa\u660e |\n|------|------|------|\n| `dx.getUser()` | Async\uff08Promise\uff09 | \u53d6\u5f97\u5546\u6236 ID \u8207\u8a9e\u8a00\u8a2d\u5b9a |\n| `dx.getPluginInfo()` | Sync\uff08Object\uff09 | \u53d6\u5f97 Plugin \u65b9\u6848\u7b49\u7d1a\u8207\u555f\u7528\u72c0\u614b |\n| `dx.security.getCSRFToken()` | Sync\uff08String\uff09 | \u53d6\u5f97 CSRF Token\uff0c\u7528\u65bc POST/PUT/DELETE |\n| `dx.security.getCSRFTokenHeaderName()` | Sync\uff08String\uff09 | \u53d6\u5f97 CSRF Header \u540d\u7a31\uff08\u56fa\u5b9a\u70ba `DX-CSRF-TOKEN`\uff09 |\n\n---\n\n## 5. `dx.getUser()` \u2014 \u5546\u6236\u8cc7\u8a0a\n\n| \u6b04\u4f4d | \u985e\u578b | \u8aaa\u660e |\n|------|------|------|\n| `merchantId` | String | \u5546\u6236 ID\uff08\u4f8b\u5982 `@abc1234`\uff09 |\n| `language` | String | \u4f7f\u7528\u8005\u8a9e\u7cfb\uff0c\u652f\u63f4\uff1a`zh-TW`\u3001`en`\u3001`ja`\u3001`ko`\u3001`th`\u3001`id` |\n\n**\u932f\u8aa4\u78bc**\uff1a`TIMEOUT`\uff085,000 ms \u8d85\u6642\uff09\u3001`EXCEPTION`\uff08\u975e\u9810\u671f runtime \u932f\u8aa4\uff09\n\n---\n\n## 6. `dx.getPluginInfo()` \u2014 Plugin \u72c0\u614b\n\n| \u6b04\u4f4d | \u985e\u578b | \u53ef\u80fd\u503c | \u8aaa\u660e |\n|------|------|--------|------|\n| `level` | String | `FREE` / `PREMIUM` | \u76ee\u524d\u65b9\u6848\u7b49\u7d1a |\n| `activatedStatus` | String | `ACTIVATED` / `ACTIVATION_INITIATED` / `ACTIVATION_FAILED` | Plugin \u555f\u7528\u72c0\u614b |\n\n---\n\n## 7. CSRF \u5b89\u5168\u6a5f\u5236\n\n\u6240\u6709\u975e GET \u8acb\u6c42\uff08POST / PUT / DELETE\uff09**\u5fc5\u9808**\u5e36\u5165 CSRF Token\uff1a\n\n```javascript\nconst csrfToken = dx.security.getCSRFToken();\nconst csrfHeaderName = dx.security.getCSRFTokenHeaderName(); // \"DX-CSRF-TOKEN\"\n\nfetch('/api/your-endpoint', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json', [csrfHeaderName]: csrfToken },\n  body: JSON.stringify(payload)\n});\n```\n\n---\n\n## 8. DX-JWT \u5f8c\u7aef\u9a57\u8b49\n\nOA Plus \u53cd\u5411\u4ee3\u7406\u6703\u5728\u6bcf\u500b\u8acb\u6c42\u7684 cookie \u4e2d\u6ce8\u5165 `dx-jwt`\uff0c12CM \u5f8c\u7aef\u9808\u9a57\u8b49\u6b64 JWT\u3002\n\n**JWT Payload \u7bc4\u4f8b**\uff1a\n```json\n{\n  \"pluginId\": \"12345\",\n  \"merchantId\": \"123456\",\n  \"pluginInfo\": { \"level\": \"FREE\", \"activatedStatus\": \"ACTIVATED\" },\n  \"iat\": 1717023000,\n  \"exp\": 1717026600\n}\n```\n\n**\u9a57\u7c3d\u65b9\u5f0f**\uff1a\u4f7f\u7528 LINE \u63d0\u4f9b\u7684 **Secret of Admin Plugin** \u4ee5 HMAC-SHA256 \u9a57\u7c3d\u3002\n\n---\n\n## \u74b0\u5883\u9650\u5236 \u2014 \u6280\u8853\u53c3\u8003\n\n---\n\n## 9. API \u8acb\u6c42\u8def\u7531\u898f\u5247\n\n- \u6240\u6709 API \u8acb\u6c42**\u5fc5\u9808**\u900f\u904e\u53cd\u5411\u4ee3\u7406\u767c\u9001\uff0c\u4e0d\u5f97\u76f4\u63a5\u547c\u53eb 12CM \u5f8c\u7aef\u57df\u540d\n- \u8acb\u6c42 URL \u5fc5\u9808\u4f7f\u7528\u8207 Plugin \u9801\u9762\u76f8\u540c\u7684 domain\n- Reverse Proxy **\u4e0d\u652f\u63f4** 3xx redirect\uff08\u9664 304 Not Modified\uff09\uff0c\u5f8c\u7aef\u4e0d\u53ef\u56de\u50b3 redirect \u56de\u61c9\n\n---\n\n## 10. UI/UX \u5be6\u4f5c\u8981\u9ede\n\n- \u8a9e\u7cfb\u652f\u63f4\uff1a`zh-TW`\uff08\u9810\u8a2d\uff09\u3001`en`\uff0c\u547c\u53eb `dx.getUser()` \u53d6\u5f97\u5f8c\u52d5\u614b\u5207\u63db\n- \u88dd\u7f6e\u652f\u63f4\uff1aMobile\u3001Tablet\uff08\u2265 768px\uff09\u3001Desktop\n- \u700f\u89bd\u5668\uff1aChrome 119+ \u5b8c\u6574\u652f\u63f4\uff1bSafari \u90e8\u5206\u652f\u63f4\uff08\u53ef\u80fd\u9700\u505c\u7528\u300c\u9632\u6b62\u8de8\u7ad9\u8ffd\u8e64\u300d\uff09\n\n---\n\n## 11. iFrame \u6c99\u76d2\u9650\u5236\n\nAdmin Plugin \u5728 iFrame \u4e2d\u57f7\u884c\uff0csandbox \u50c5\u5141\u8a31\uff1a\n\n- `allow-same-origin`\uff1a\u540c\u6e90 cookie\u3001localStorage\u3001IndexedDB \u64cd\u4f5c\n- `allow-scripts`\uff1a\u5141\u8a31\u57f7\u884c\u8173\u672c\n\n---\n\n## 12. CSP \u5408\u898f\u8981\u6c42\n\n12CM Plugin \u9801\u9762\u9808\u9075\u5b88\u5e73\u53f0\u7684 Content Security Policy\u3002\u6240\u6709\u5916\u90e8\u8cc7\u6e90\u9808\u5728 ACL \u4e2d\u660e\u78ba\u5b9a\u7fa9\uff0c\u52d5\u614b\u6ce8\u5165\u7684 `<\x73cript>` \u8207 `<link>` \u6a19\u7c64\u9808\u5305\u542b\u6709\u6548 nonce\uff0c\u5426\u5247\u5c07\u88ab CSP \u5c01\u9396\u3002\n\n---\n\n*\u672c\u898f\u683c\u4ee5 LINE OA Plus TW DX Solution \u6280\u8853\u6587\u4ef6 v2.0.0 \u53ca DX Solution Phase 2 Product Guide \u70ba\u6e96\u3002*\n";;
+const MD_FILES = {"01": "spec-01-invoice-management.md", "02": "spec-02-payment-gateway.md", "03": "spec-03-premium-activation.md", "04": "spec-04-frontend-sdk-roles.md"};
+const MD_DATA = { '01': MD_01, '02': MD_02, '03': MD_03, '04': MD_04 };
+
+function downloadMD(num) {
+  const content = MD_DATA[num];
+  const filename = MD_FILES[num];
+  if (!content) return;
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+</script>
+
+</body>
+</html>

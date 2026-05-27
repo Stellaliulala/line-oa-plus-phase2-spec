@@ -1,0 +1,3410 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec 01 · 發票管理 | LINE OA Plus DX Phase 2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans TC', sans-serif; background: #f7f8f5; color: #1a1a1a; font-size: 15px; line-height: 1.7; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --sidebar-bg: #2d4a2d;
+  --sidebar-hover: #3d6b3d;
+  --sidebar-active: #4a8a4a;
+  --sidebar-text: #c8dfc8;
+  --sidebar-text-active: #ffffff;
+  --sidebar-width: 270px;
+  --content-max: 900px;
+  --tag-line: #1a73e8; --tag-line-bg: #e8f0fe;
+  --tag-internal: #e65c00; --tag-internal-bg: #fff3e0;
+  --tag-pending: #7b5ea7; --tag-pending-bg: #f3eeff;
+  --border: #e0e0e0;
+  --bg: #f7f8f5;
+  --white: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #666;
+  --code-bg: #f4f6f0;
+  --accent: #2d4a2d;
+  --activated: #2e7d32;
+  --warning: #e65100;
+  --expired: #c62828;
+  --info: #1565c0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-logo .doc-series {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(200,223,200,0.6); margin-bottom: 5px;
+}
+
+.sidebar-logo h2 { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.4; }
+
+.sidebar-nav { padding: 8px 0; flex: 1; }
+
+.nav-spec-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 6px;
+  cursor: pointer;
+  user-select: none;
+  border-left: 3px solid transparent;
+  transition: background 0.15s;
+}
+
+.nav-spec-header:hover { background: rgba(255,255,255,0.05); }
+
+.nav-spec-header.active-group {
+  background: rgba(255,255,255,0.07);
+  border-left-color: #7ec87e;
+}
+
+.nav-spec-badge {
+  background: var(--sidebar-active);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.nav-spec-title { font-size: 12px; font-weight: 600; color: #e0f0e0; flex: 1; line-height: 1.3; }
+.nav-spec-arrow { font-size: 10px; color: rgba(200,223,200,0.5); transition: transform 0.2s; }
+.nav-spec-header.open .nav-spec-arrow { transform: rotate(90deg); }
+
+.nav-sub {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.nav-sub.open { max-height: 800px; }
+
+.nav-sub a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px 7px 20px;
+  color: rgba(200,223,200,0.75);
+  text-decoration: none;
+  font-size: 12px;
+  border-left: 3px solid transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-sub a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+.nav-sub a.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-left-color: #7ec87e;
+  font-weight: 600;
+}
+
+.nav-sub .nav-icon { font-size: 12px; opacity: 0.7; flex-shrink: 0; }
+
+.nav-spec-header.disabled { opacity: 0.45; cursor: default; pointer-events: none; }
+
+.sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 10.5px;
+  color: rgba(200,223,200,0.35);
+  line-height: 1.7;
+}
+
+/* ── Main ── */
+#main { margin-left: var(--sidebar-width); flex: 1; min-height: 100vh; }
+
+/* ── Spec panels ── */
+.spec-panel { display: none; }
+.spec-panel.active { display: block; }
+
+.doc-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 48px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.doc-header .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+.doc-header h1 {
+  font-size: 24px; font-weight: 700; color: var(--accent);
+  line-height: 1.3; margin-bottom: 10px;
+}
+
+.doc-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
+.doc-meta span { display: flex; align-items: center; gap: 4px; }
+
+.content-area { max-width: var(--content-max); margin: 0 auto; padding: 36px 48px 80px; }
+
+/* ── Shared section styles ── */
+.spec-section {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 28px; overflow: hidden;
+}
+
+.section-header {
+  padding: 16px 26px; background: #f9faf7;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+
+.section-num {
+  width: 28px; height: 28px; background: var(--accent); color: #fff;
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+
+.section-header h2 { font-size: 15.5px; font-weight: 700; color: var(--accent); flex: 1; }
+.section-body { padding: 22px 26px; }
+
+/* ── Tags ── */
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px; vertical-align: middle; margin-left: 4px;
+}
+.tag-line { background: var(--tag-line-bg); color: var(--tag-line); }
+.tag-internal { background: var(--tag-internal-bg); color: var(--tag-internal); }
+.tag-pending { background: var(--tag-pending-bg); color: var(--tag-pending); }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 14px 0; }
+th {
+  background: #f2f4ef; font-weight: 600; color: var(--accent);
+  padding: 10px 14px; text-align: left; border: 1px solid var(--border); font-size: 12.5px;
+}
+td { padding: 9px 14px; border: 1px solid var(--border); vertical-align: top; line-height: 1.65; }
+tr:nth-child(even) td { background: #fcfcfb; }
+td code, th code {
+  background: var(--code-bg); padding: 1px 6px; border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #c7254e;
+}
+
+/* ── Code blocks ── */
+pre {
+  background: #1e2a1e; color: #c8dfc8; border-radius: 8px;
+  padding: 16px 18px; overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7;
+  margin: 14px 0; border: 1px solid rgba(255,255,255,0.05);
+}
+.code-label {
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 5px; font-family: 'JetBrains Mono', monospace;
+}
+pre .key { color: #81c784; } pre .str { color: #ffcc80; }
+pre .num { color: #80cbc4; } pre .cmt { color: #6a8f6a; font-style: italic; }
+pre .kw  { color: #ce93d8; } pre .fn  { color: #90caf9; }
+
+/* ── Callouts ── */
+.callout {
+  border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-size: 13.5px;
+  line-height: 1.65; display: flex; gap: 10px; align-items: flex-start;
+}
+.callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.callout-body { flex: 1; }
+.callout-body strong { display: block; margin-bottom: 4px; font-size: 13px; }
+.callout-block  { background: #fff0f0; border: 2px solid #f5a5a5; color: #7a1a1a; }
+.callout-warning{ background: #fff8e1; border: 1px solid #ffe082; color: #6d4c00; }
+.callout-info   { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; }
+.callout-note   { background: #f3eeff; border: 1px solid #ce93d8; color: #4a148c; }
+.callout-success{ background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+
+/* ── Typography ── */
+h3 {
+  font-size: 14px; font-weight: 700; color: #2d4a2d;
+  margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e8f0e8;
+  display: flex; align-items: center; gap: 8px;
+}
+h3:first-child { margin-top: 0; }
+h4 { font-size: 13px; font-weight: 700; color: #3d5a3d; margin: 16px 0 8px; }
+p { margin-bottom: 10px; color: #333; font-size: 14px; }
+ul, ol { margin: 8px 0 12px 20px; font-size: 14px; line-height: 1.8; }
+li { margin-bottom: 3px; }
+strong { color: var(--text); }
+a { color: #1a73e8; }
+
+/* ── Spec 02 specific ── */
+.role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.badge-12cm { background: #e8f5e9; color: #2e7d32; }
+.badge-line { background: #e3f2fd; color: #1565c0; }
+.badge-newebpay { background: #fff3e0; color: #e65100; }
+.badge-block { background: #ffebee; color: #c62828; }
+.badge-ok   { background: #e8f5e9; color: #2e7d32; }
+.badge-warn { background: #fff8e1; color: #e65c00; }
+
+.scope-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 14px 0; }
+.scope-card { border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
+.scope-card .scope-title { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.scope-card ul { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.8; }
+.scope-line { background: #e3f2fd; } .scope-line .scope-title { color: #1565c0; }
+.scope-pay  { background: #fff3e0; } .scope-pay .scope-title  { color: #e65100; }
+.scope-12cm { background: #e8f5e9; } .scope-12cm .scope-title { color: #2e7d32; }
+
+.flow-box { background: #f9faf7; border: 1px solid var(--border); border-radius: 10px; padding: 22px 26px; margin: 14px 0; }
+.flow-step { display: flex; align-items: flex-start; gap: 14px; padding: 10px 0; position: relative; }
+.flow-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 38px; width: 2px; height: calc(100% - 14px); background: #c5d8c5; }
+.flow-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; position: relative; z-index: 1; }
+.dot-line { background: #e3f2fd; color: #1565c0; border: 2px solid #90caf9; }
+.dot-user { background: #f3eeff; color: #4a148c; border: 2px solid #ce93d8; }
+.dot-12cm { background: #e8f5e9; color: #2e7d32; border: 2px solid #a5d6a7; }
+.dot-pay  { background: #fff3e0; color: #e65100; border: 2px solid #ffcc80; }
+.flow-content { padding-top: 6px; flex: 1; }
+.flow-content .actor { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
+.flow-content .desc { font-size: 13.5px; color: #333; line-height: 1.5; }
+.flow-content .note { font-size: 12px; color: #888; margin-top: 3px; }
+
+.retry-row { display: flex; align-items: center; gap: 0; margin: 16px 0; overflow-x: auto; }
+.retry-node { text-align: center; flex-shrink: 0; }
+.retry-circle { width: 44px; height: 44px; border-radius: 50%; background: #fff8e1; border: 2px solid #ffcc80; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #6d4c00; margin: 0 auto 4px; }
+.retry-label { font-size: 11px; color: #888; }
+.retry-arrow { flex: 1; height: 2px; background: #ddd; position: relative; min-width: 40px; }
+.retry-arrow::after { content: attr(data-label); position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #e65100; white-space: nowrap; font-weight: 600; }
+
+.impl-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 13.5px; }
+.impl-item:last-child { border-bottom: none; }
+.impl-icon { width: 28px; height: 28px; background: var(--accent); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+.impl-body { flex: 1; }
+.impl-body strong { font-size: 13.5px; display: block; margin-bottom: 3px; }
+.impl-body p { font-size: 13px; color: #555; margin: 0; }
+
+/* ── Spec 03 specific ── */
+.flow-svg-wrap { background: #f9faf7; border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; }
+.condition-list { background: #f0f7f0; border: 1px solid #b2dfb2; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+.condition-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 13.5px; }
+.condition-item:not(:last-child) { border-bottom: 1px solid #d4ecd4; }
+.check-icon { width: 20px; height: 20px; background: #2e7d32; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+.format-box { background: #1e2a1e; color: #c8dfc8; border-radius: 8px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 12px 0; }
+.format-box .label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #6a8f6a; margin-bottom: 6px; }
+.format-box .pattern { color: #81c784; margin-bottom: 8px; }
+.format-box .example { color: #ffcc80; }
+.status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.badge-err2 { background: #ffebee; color: #c62828; }
+.account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.account-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #fcfcfb; }
+.account-card .plan-label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.account-card .plan-name { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.account-card p { font-size: 13px; margin-bottom: 0; color: #555; }
+
+/* ── Spec 04 specific ── */
+.api-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+.api-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.api-card-header { background: #f2f4ef; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+.api-type-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.3px; }
+.badge-async { background: #e3f2fd; color: #1565c0; }
+.badge-sync  { background: #e8f5e9; color: #2e7d32; }
+.api-card-header code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #1a1a1a; font-weight: 600; }
+.api-card-body { padding: 10px 14px; font-size: 13px; color: #555; }
+
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+.role-card { border-radius: 8px; padding: 18px; border: 2px solid; }
+.role-admin    { border-color: #90caf9; background: #e3f2fd; }
+.role-operator { border-color: #ffcc80; background: #fff8e1; }
+.role-card .role-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.role-admin .role-name    { color: #1565c0; }
+.role-operator .role-name { color: #e65100; }
+.role-card .role-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.role-card .perm-list { list-style: none; margin: 0; padding: 0; }
+.role-card .perm-item { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.05); line-height: 1.5; }
+.role-card .perm-item:last-child { border-bottom: none; }
+.perm-ok { color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+.perm-no { color: #c62828; font-weight: 700; flex-shrink: 0; }
+
+.env-staging { background: #fff3e0; color: #e65100; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.env-prod    { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+
+.browser-row { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+.browser-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 13.5px; min-width: 200px; }
+.browser-icon { font-size: 22px; }
+.browser-name { font-weight: 600; font-size: 13px; }
+.browser-note { font-size: 11.5px; color: var(--text-muted); }
+.support-full    { border-left: 4px solid #2e7d32; }
+.support-partial { border-left: 4px solid #e65100; }
+
+.sandbox-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13.5px; }
+.sandbox-item:last-child { border-bottom: none; }
+.sandbox-attr { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #c7254e; background: var(--code-bg); padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+
+
+/* ── Download button ── */
+.doc-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #2d4a2d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.doc-download-btn:hover { background: #3d6b3d; color: #fff; }
+.doc-download-btn svg { flex-shrink: 0; }
+.doc-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.doc-header-row h1 { flex: 1; min-width: 0; }
+
+.scroll-target { scroll-margin-top: 80px; }
+
+@media (max-width: 900px) {
+  #sidebar { width: 220px; }
+  #main { margin-left: 220px; }
+  .doc-header, .content-area { padding-left: 24px; padding-right: 24px; }
+  .scope-grid, .api-grid, .role-grid { grid-template-columns: 1fr; }
+}
+
+/#panel-01 * ── Spec 01 Invoice styles ── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --green-dark: #2d4a2d;
+    --green-mid: #3d6b3d;
+    --green-light: #e8f0e8;
+    --green-accent: #4a7c4a;
+    --green-hover: #f0f5f0;
+    --border: #d4e0d4;
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a5a4a;
+    --text-muted: #7a8a7a;
+    --bg: #ffffff;
+    --bg-page: #f7faf7;
+    --table-head: #3d6b3d;
+    --table-stripe: #f4f8f4;
+    --code-bg: #f0f4f0;
+    --code-border: #c8d8c8;
+    --note-bg: #f0f7f0;
+    --note-border: #4a7c4a;
+    --warning-bg: #fffbf0;
+    --warning-border: #c8a832;
+    --tag-internal-bg: #fff3e0;
+    --tag-internal: #b45309;
+    --tag-line-bg: #e8f0fe;
+    --tag-line: #1a56db;
+    --sidebar-w: 240px;
+  }#panel-01 #panel-01 body {
+    font-family: -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    background: var(--bg-page);
+    display: flex;
+    min-height: 100vh;
+  }#panel-01 /* ── Sidebar ── */
+#panel-01 #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--green-dark);
+    color: #fff;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }#panel-01 #panel-01 #sidebar-title {
+    padding: 20px 18px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    line-height: 1.4;
+  }#panel-01 #panel-01 #sidebar-title span {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.6;
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }#panel-01 #panel-01 #sidebar nav { padding: 12px 0 24px; flex: 1; }#panel-01 #panel-01 .nav-group-label {
+    padding: 14px 18px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }#panel-01 #panel-01 .nav-item {
+    display: block;
+    padding: 7px 18px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.82);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    border-left: 3px solid transparent;
+  }#panel-01 #panel-01 .nav-item:hover, #panel-01 #panel-01 .nav-item.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-left-color: rgba(255,255,255,0.6);
+  }#panel-01 #panel-01 .nav-item.sub {
+    padding-left: 30px;
+    font-size: 12.5px;
+    opacity: 0.85;
+  }#panel-01 /* ── Main ── */
+#panel-01 #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0 0 80px;
+  }#panel-01 /* ── Top actions bar ── */
+#panel-01 #topbar {
+    position: sticky;
+    top: 0;
+    background: rgba(247,250,247,0.95);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 48px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    z-index: 50;
+  }#panel-01 #panel-01 .btn-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }#panel-01 #panel-01 .btn-dl:hover { border-color: var(--green-accent); color: var(--green-accent); }#panel-01 /* ── Content ── */
+#panel-01 #content { padding: 40px 48px; max-width: 900px; }#panel-01 #panel-01 section { margin-bottom: 56px; scroll-margin-top: 58px; }#panel-01 #panel-01 h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }#panel-01 #panel-01 .meta-line {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }#panel-01 #panel-01 .section-divider {
+    border: none;
+    border-top: 2px solid var(--green-dark);
+    margin: 0 0 24px;
+  }#panel-01 #panel-01 h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }#panel-01 #panel-01 h2 .section-num {
+    display: inline-block;
+    background: var(--green-dark);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }#panel-01 #panel-01 h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 24px 0 12px;
+    scroll-margin-top: 58px;
+  }#panel-01 #panel-01 p { margin-bottom: 12px; color: var(--text-secondary); }#panel-01 /* Tags */
+#panel-01 .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+  }#panel-01 #panel-01 .tag-line { background: var(--tag-line-bg); color: var(--tag-line); }#panel-01 #panel-01 .tag-internal { background: var(--tag-internal-bg); color: var(--tag-internal); }#panel-01 /* Tables */
+#panel-01 .table-wrap { overflow-x: auto; margin-bottom: 20px; }#panel-01 #panel-01 table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }#panel-01 #panel-01 thead tr { background: var(--table-head); }#panel-01 #panel-01 thead th {
+    padding: 10px 14px;
+    text-align: left;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+  }#panel-01 #panel-01 tbody tr:nth-child(even) { background: var(--table-stripe); }#panel-01 #panel-01 tbody tr:hover { background: var(--green-hover); }#panel-01 #panel-01 td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 td:first-child { font-weight: 500; color: var(--text-primary); white-space: nowrap; }#panel-01 #panel-01 .badge-y {
+    display: inline-block;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 #panel-01 .badge-n {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 #panel-01 .badge-cond {
+    display: inline-block;
+    background: #fef9c3;
+    color: #854d0e;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }#panel-01 /* Code */
+#panel-01 code {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #2d4a2d;
+  }#panel-01 #panel-01 pre {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-left: 4px solid var(--green-accent);
+    border-radius: 6px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+  }#panel-01 /* Callouts */
+#panel-01 .callout {
+    border-left: 4px solid var(--note-border);
+    background: var(--note-bg);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 .callout-warning {
+    border-left-color: var(--warning-border);
+    background: var(--warning-bg);
+  }#panel-01 #panel-01 .callout strong { color: var(--text-primary); }#panel-01 /* Note for internal design */
+#panel-01 .note-internal {
+    border: 1px dashed var(--tag-internal);
+    background: var(--tag-internal-bg);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--tag-internal);
+    margin-bottom: 20px;
+  }#panel-01 /* Flow diagram */
+#panel-01 .flow {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }#panel-01 #panel-01 .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    position: relative;
+  }#panel-01 #panel-01 .flow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    bottom: -8px;
+    width: 2px;
+    background: var(--border);
+  }#panel-01 #panel-01 .flow-dot {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 50%;
+    background: var(--green-dark);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 1;
+  }#panel-01 #panel-01 .flow-dot.branch { background: var(--green-accent); }#panel-01 #panel-01 .flow-dot.end { background: #166534; }#panel-01 #panel-01 .flow-text {
+    padding-top: 5px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }#panel-01 #panel-01 .flow-text strong { color: var(--text-primary); }#panel-01 #panel-01 .flow-branch {
+    margin-left: 42px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }#panel-01 #panel-01 .flow-branch::before { content: '├─ '; color: var(--text-muted); }#panel-01 #panel-01 .flow-branch:last-child::before { content: '└─ '; color: var(--text-muted); }#panel-01 /* List */
+#panel-01 ul.spec-list {
+    padding-left: 20px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }#panel-01 #panel-01 ul.spec-list li { margin-bottom: 7px; }#panel-01 /* Prototype embed section */
+#panel-01 .prototype-wrap {
+    border: 2px solid var(--green-accent);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }#panel-01 #panel-01 .prototype-header {
+    background: var(--green-dark);
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }#panel-01 #panel-01 .prototype-body {
+    background: #fff;
+    padding: 28px 32px;
+  }
+
+  /* Responsive tweak */
+  @media (max-width: 768px) {#panel-01 #panel-01 #sidebar { display: none; }#panel-01 #panel-01 #main { margin-left: 0; }#panel-01 #panel-01 #content { padding: 24px 20px; }
+  }
+/* ── Spec 01 table th color fix ── */
+#panel-01 thead th { color: #fff !important; background: #3d6b3d !important; }
+#panel-01 .table-wrap thead th { color: #fff !important; background: #3d6b3d !important; }
+#panel-01 table thead tr { background: #3d6b3d !important; }
+#panel-01 table thead tr th { color: #fff !important; }
+
+/* ── Spec 01 Invoice styles (scoped) ── */
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-dark: #2d4a2d;
+    --green-mid: #3d6b3d;
+    --green-light: #e8f0e8;
+    --green-accent: #4a7c4a;
+    --green-hover: #f0f5f0;
+    --border: #d4e0d4;
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a5a4a;
+    --text-muted: #7a8a7a;
+    --bg: #ffffff;
+    --bg-page: #f7faf7;
+    --table-head: #3d6b3d;
+    --table-stripe: #f4f8f4;
+    --code-bg: #f0f4f0;
+    --code-border: #c8d8c8;
+    --note-bg: #f0f7f0;
+    --note-border: #4a7c4a;
+    --warning-bg: #fffbf0;
+    --warning-border: #c8a832;
+    --tag-internal-bg: #fff3e0;
+    --tag-internal: #b45309;
+    --tag-line-bg: #e8f0fe;
+    --tag-line: #1a56db;
+    --sidebar-w: 240px;
+  }
+
+#panel-01 body {
+    font-family: -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    background: var(--bg-page);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+#panel-01 #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--green-dark);
+    color: #fff;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+#panel-01 #sidebar-title {
+    padding: 20px 18px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    line-height: 1.4;
+  }
+
+#panel-01 #sidebar-title span {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.6;
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+#panel-01 #sidebar nav { padding: 12px 0 24px; flex: 1; }
+
+#panel-01 .nav-group-label {
+    padding: 14px 18px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+#panel-01 .nav-item {
+    display: block;
+    padding: 7px 18px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.82);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover, .nav-item.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-left-color: rgba(255,255,255,0.6);
+  }
+
+#panel-01 .nav-item.sub {
+    padding-left: 30px;
+    font-size: 12.5px;
+    opacity: 0.85;
+  }
+
+  /* ── Main ── */
+#panel-01 #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0 0 80px;
+  }
+
+  /* ── Top actions bar ── */
+#panel-01 #topbar {
+    position: sticky;
+    top: 0;
+    background: rgba(247,250,247,0.95);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 48px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    z-index: 50;
+  }
+
+#panel-01 .btn-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .btn-dl:hover { border-color: var(--green-accent); color: var(--green-accent); }
+
+  /* ── Content ── */
+#panel-01 #content { padding: 40px 48px; max-width: 900px; }
+
+#panel-01 section { margin-bottom: 56px; scroll-margin-top: 58px; }
+
+#panel-01 h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+#panel-01 .meta-line {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+
+#panel-01 .section-divider {
+    border: none;
+    border-top: 2px solid var(--green-dark);
+    margin: 0 0 24px;
+  }
+
+#panel-01 h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+#panel-01 h2 .section-num {
+    display: inline-block;
+    background: var(--green-dark);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+
+#panel-01 h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 24px 0 12px;
+    scroll-margin-top: 58px;
+  }
+
+#panel-01 p { margin-bottom: 12px; color: var(--text-secondary); }
+
+  /* Tags */
+#panel-01 .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+  }
+#panel-01 .tag-line { background: var(--tag-line-bg); color: var(--tag-line); }
+#panel-01 .tag-internal { background: var(--tag-internal-bg); color: var(--tag-internal); }
+
+  /* Tables */
+#panel-01 .table-wrap { overflow-x: auto; margin-bottom: 20px; }
+
+#panel-01 table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+#panel-01 thead tr { background: var(--table-head); }
+#panel-01 thead th {
+    padding: 10px 14px;
+    text-align: left;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--green-hover); }
+
+#panel-01 td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-secondary);
+  }
+
+  td:first-child { font-weight: 500; color: var(--text-primary); white-space: nowrap; }
+
+#panel-01 .badge-y {
+    display: inline-block;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }
+#panel-01 .badge-n {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }
+#panel-01 .badge-cond {
+    display: inline-block;
+    background: #fef9c3;
+    color: #854d0e;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }
+
+  /* Code */
+#panel-01 code {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #2d4a2d;
+  }
+
+#panel-01 pre {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-left: 4px solid var(--green-accent);
+    border-radius: 6px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+  }
+
+  /* Callouts */
+#panel-01 .callout {
+    border-left: 4px solid var(--note-border);
+    background: var(--note-bg);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+#panel-01 .callout-warning {
+    border-left-color: var(--warning-border);
+    background: var(--warning-bg);
+  }
+
+#panel-01 .callout strong { color: var(--text-primary); }
+
+  /* Note for internal design */
+#panel-01 .note-internal {
+    border: 1px dashed var(--tag-internal);
+    background: var(--tag-internal-bg);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--tag-internal);
+    margin-bottom: 20px;
+  }
+
+  /* Flow diagram */
+#panel-01 .flow {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+
+#panel-01 .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    position: relative;
+  }
+
+  .flow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    bottom: -8px;
+    width: 2px;
+    background: var(--border);
+  }
+
+#panel-01 .flow-dot {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 50%;
+    background: var(--green-dark);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 1;
+  }
+
+#panel-01 .flow-dot.branch { background: var(--green-accent); }
+#panel-01 .flow-dot.end { background: #166534; }
+
+#panel-01 .flow-text {
+    padding-top: 5px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+#panel-01 .flow-text strong { color: var(--text-primary); }
+
+#panel-01 .flow-branch {
+    margin-left: 42px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .flow-branch::before { content: '├─ '; color: var(--text-muted); }
+  .flow-branch:last-child::before { content: '└─ '; color: var(--text-muted); }
+
+  /* List */
+#panel-01 ul.spec-list {
+    padding-left: 20px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+#panel-01 ul.spec-list li { margin-bottom: 7px; }
+
+  /* Prototype embed section */
+#panel-01 .prototype-wrap {
+    border: 2px solid var(--green-accent);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+#panel-01 .prototype-header {
+    background: var(--green-dark);
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+#panel-01 .prototype-body {
+    background: #fff;
+    padding: 28px 32px;
+  }
+
+  /* Responsive tweak */
+  @media (max-width: 768px) {
+#panel-01 #sidebar { display: none; }
+#panel-01 #main { margin-left: 0; }
+#panel-01 #content { padding: 24px 20px; }
+  }
+>
+
+/* ── Spec 01 Registration Prototype styles ── */
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .reg-proto-wrap {
+    font-family: -apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #f4f4f8;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 0 48px;
+  }
+
+  .reg-card {
+    background: #fff;
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 24px rgba(0,0,0,.07);
+  }
+
+  /* ── Header ── */
+  .reg-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 24px 24px;
+    gap: 6px;
+    text-align: center;
+  }
+  .reg-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .reg-logo-icon {
+    width: 44px; height: 44px;
+    background: #1a1a1a;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .reg-logo-icon svg { width: 22px; height: 22px; }
+  .reg-brand-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -.3px;
+    color: #1a1a1a;
+  }
+  .reg-subtitle {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  /* ── Tab ── */
+  .reg-tab-bar {
+    border-bottom: 1px solid #e8e8e8;
+    text-align: center;
+    padding: 0 24px;
+  }
+  .reg-tab-label {
+    display: inline-block;
+    padding: 10px 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #3a7bd5;
+    border-bottom: 2px solid #3a7bd5;
+  }
+
+  /* ── Form Body ── */
+  .reg-form-body {
+    flex: 1;
+    padding: 28px 24px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Section Title ── */
+  .reg-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 14px;
+    margin-top: 4px;
+  }
+
+  /* ── Field ── */
+  .reg-field {
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .reg-field > label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .reg-field > label .req {
+    color: #e04040;
+    margin-left: 2px;
+  }
+  .reg-input {
+    width: 100%;
+    height: 44px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    outline: none;
+    transition: border-color .18s;
+    -webkit-appearance: none;
+    display: block;
+  }
+  .reg-input::placeholder { color: #bbb; }
+  .reg-input:focus { border-color: #3a7bd5; }
+  .reg-input.reg-error { border-color: #e04040; }
+
+  /* ── Error msg ── */
+  .reg-err-msg {
+    font-size: 11.5px;
+    color: #e04040;
+    margin-top: 4px;
+    display: none;
+  }
+  .reg-err-msg.visible { display: block; }
+
+  /* ── Divider between sections ── */
+  .reg-divider {
+    height: 1px;
+    background: #ebebeb;
+    margin: 8px 0 22px;
+  }
+
+  /* ── Invoice section — divider only, no background ── */
+  .reg-invoice-section {
+    margin-bottom: 20px;
+  }
+  .reg-invoice-section .reg-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #555;
+    margin-bottom: 16px;
+  }
+  .reg-invoice-section .reg-section-title svg {
+    width: 14px; height: 14px; flex-shrink: 0;
+    stroke: #555;
+  }
+
+  /* ── Radio toggle group (抬頭 / 載具) ── */
+  .reg-radio-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .reg-radio-btn {
+    flex: 1;
+    height: 44px;
+    border: 1.5px solid #d8d8d8;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #555;
+    background: #fff;
+    transition: border-color .18s, background .18s, color .18s;
+    user-select: none;
+  }
+  .reg-radio-btn.active {
+    border-color: #3a7bd5;
+    background: #eaf1fb;
+    color: #3a7bd5;
+    font-weight: 600;
+  }
+  .reg-radio-btn input { display: none; }
+
+  /* ── Carrier sub-toggle ── */
+  .reg-carrier-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .reg-carrier-btn {
+    flex: 1;
+    height: 44px;
+    border: 1.5px solid #d8d8d8;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #555;
+    background: #fff;
+    transition: border-color .18s, background .18s, color .18s;
+    user-select: none;
+  }
+  .reg-carrier-btn.active {
+    border-color: #3a7bd5;
+    background: #eaf1fb;
+    color: #3a7bd5;
+    font-weight: 600;
+  }
+  .reg-carrier-btn input { display: none; }
+
+  /* ── Hidden ── */
+  .reg-hidden { display: none !important; }
+
+  /* ── Submit ── */
+  .reg-submit-btn {
+    width: 100%;
+    height: 50px;
+    background: #3a7bd5;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    cursor: pointer;
+    transition: background .18s, transform .1s;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .reg-submit-btn:active { transform: scale(.98); }
+  .reg-submit-btn:hover { background: #2d66c3; }
+
+  /* ── Toast ── */
+  .reg-toast {
+    position: fixed;
+    top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #3a7bd5;
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 18px rgba(58,123,213,.35);
+    transition: transform .32s cubic-bezier(.34,1.56,.64,1);
+    z-index: 9999;
+    white-space: nowrap;
+  }
+  .reg-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Duplicate badge ── */
+  .reg-dup-badge {
+    display: none;
+    font-size: 11.5px;
+    color: #e04040;
+    margin-top: 4px;
+  }
+  .reg-dup-badge.visible { display: block; }
+
+  /* ── Hint ── */
+  .reg-hint {
+    font-size: 11px;
+    color: #999;
+    margin-top: 3px;
+  }
+</style>
+</head>
+<body>
+<div style="display:block;" id="panel-01">
+    <header class="doc-header">
+      <div class="breadcrumb">LINE OA Plus DX Phase 2 › 開發規格文件</div>
+      <div class="doc-header-row">
+        <h1>Spec 01 · 發票管理<br><small style="font-size:15px;font-weight:400;color:#555;">Invoice Management</small></h1>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <button class="doc-download-btn" onclick="downloadMD('01')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 下載 .md
+          </button>
+          <a class="doc-download-btn" style="background:#1a5fa8;text-decoration:none;" href="assets/LINE_OA_Plus_TW_DX_Solution_v2.0.0.pdf" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 技術文件 v2.0.0
+          </a>
+          <a class="doc-download-btn" style="background:#1a5fa8;text-decoration:none;" href="assets/LINE_OA_Plus_TW_DX_Solution_Phase2_Product_Guide.pdf" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Product Guide
+          </a>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <span>📅 2026-05-21</span><span>📌 版本 1.2</span>
+        <span>📚 Product Guide §14.2</span>
+      </div>
+    </header>
+    <div class="content-area">
+<!-- Meta -->
+    <section id="s01-meta">
+      <h1>發票管理</h1>
+      <p class="meta-line">版本：v1.2 &nbsp;｜&nbsp; 更新日期：2026-05-21 &nbsp;｜&nbsp; 依據：DX Solution Phase 2 Product Guide § 14.2</p>
+      <hr class="section-divider">
+
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><td>文件名稱</td><td>開發規格文件 #01：發票管理</td></tr>
+            <tr><td>SPEC 版本</td><td>v1.2</td></tr>
+            <tr><td>最後更新</td><td>2026-05-21</td></tr>
+            <tr><td>依據文件</td><td>LINE OA Plus TW DX Solution Technical Document v2.0.0、DX Solution Phase 2 Product Guide § 14.2</td></tr>
+            <tr><td>負責系統</td><td>12CM Admin Plugin（LINE OA Plus 嵌入）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- S1 -->
+    <section id="s01-s1">
+      <h2><span class="section-num">1</span> 功能概述</h2>
+      <hr class="section-divider">
+      <p>發票由 12CM（服務提供商）負責開立，OA Plus 平台不維護發票資料。使用者在 12CM 系統內填寫發票資訊，12CM 系統須獨立承接發票資料管理與開票流程。</p>
+      <div class="callout" style="border-left-color:#1a73e8;background:#e8f0fe;">
+        <strong style="color:#1565c0;">整合方式：導流至 12CM 外部頁面</strong><br>
+        <span style="color:#1a3a6b;">LINE 採用「連結跳轉」而非頁面內嵌方式。付款成功後 LINE 在頁面上顯示連結按鈕，使用者點擊後<strong>另開新視窗</strong>跳轉至 12CM 開發的發票填寫頁。訂閱管理頁面亦提供連結，供使用者日後更新發票資訊（如更換載具）。</span>
+      </div>
+      <p>支援兩種發票類型：</p>
+      <ul class="spec-list">
+        <li><strong>電子發票</strong>（個人抬頭）</li>
+        <li><strong>三聯式統一發票</strong>（公司行號）</li>
+      </ul>
+
+      <h3>發票開立頻率</h3>
+      <p>幫手市集採<strong>訂閱制</strong>，首次付款成功後即啟動訂閱，往後每月同一天自動續扣。每次續扣成功，OA Plus 均會發送一次 <code>PAYMENT_SUCCEEDED</code> Webhook，12CM 每次收到此事件都應觸發一次開票流程。</p>
+      <div class="callout">
+        <strong>工程注意：</strong>開票並非一次性行為。每位商戶每月均會產生一筆新的開票紀錄，DB 設計需支援一對多關係（一個 <code>merchantId</code> 對應多筆 <code>invoice_pending</code> 紀錄），發票號碼管理也須考量每月累積的資料量。
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">付款事件</th><th style="color:#fff;padding:10px 14px;font-weight:600;">觸發來源</th><th style="color:#fff;padding:10px 14px;font-weight:600;">開票行為</th></tr></thead>
+          <tbody>
+            <tr><td>首次訂閱付款</td><td>使用者完成訂閱 Checkout</td><td>觸發第一次開票流程</td></tr>
+            <tr><td>每月自動續扣</td><td>OA Plus 平台自動執行</td><td>每月同一天觸發一次開票流程</td></tr>
+            <tr><td>寬限期補救扣款成功</td><td>OA Plus 平台 retry</td><td>同樣觸發開票流程</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- S2 -->
+    <section id="s01-s2">
+      <h2><span class="section-num">2</span> 責任範圍</h2>
+      <hr class="section-divider">
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">範疇</th><th style="color:#fff;padding:10px 14px;font-weight:600;">負責方</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
+          <tbody>
+            <tr><td>發票開立</td><td>12CM</td><td>由 12CM 系統產生與發送發票</td></tr>
+            <tr><td>發票資訊收集</td><td>12CM</td><td>使用者在 12CM 系統填寫抬頭、統編等資訊</td></tr>
+            <tr><td>付款成功事件觸發</td><td>OA Plus 平台</td><td>透過 <code>PAYMENT_SUCCEEDED</code> Webhook 通知 12CM</td></tr>
+            <tr><td>付款快照查詢</td><td>12CM</td><td>收到 Webhook 後呼叫 Open API 取得付款明細</td></tr>
+            <tr><td>待開票紀錄管理</td><td>12CM</td><td>發票資料未齊全時，建立待開票紀錄，資料補齊後補開</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- S3 -->
+    <section id="s01-s3">
+      <h2><span class="section-num">3</span> 發票類型定義</h2>
+      <hr class="section-divider">
+
+      <h3 id="s01-s3-1">3.1 電子發票（個人）</h3>
+      <p>使用者選擇個人抬頭時適用。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">格式 / 說明</th></tr></thead>
+          <tbody>
+            <tr><td>抬頭類型</td><td><span class="badge-y">Y</span></td><td>固定為「個人」</td></tr>
+            <tr><td>電子信箱</td><td><span class="badge-y">Y</span></td><td>發票寄送用，需通過 email 格式驗證</td></tr>
+            <tr><td>載具類型</td><td><span class="badge-y">Y</span></td><td>二選一：Email 寄送（會員載具）、手機條碼</td></tr>
+            <tr><td>手機條碼</td><td><span class="badge-cond">條件必填</span></td><td>選擇「手機條碼」時必填，格式：<code>/XXXXXXX</code>（斜線 + 7 碼英數大寫）</td></tr>
+            <tr><td>聯絡電話</td><td><span class="badge-n">N</span></td><td>選填</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="s01-s3-2">3.2 三聯式統一發票（公司）</h3>
+      <p>使用者選擇公司抬頭時適用，同時停用載具設定。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">格式 / 說明</th></tr></thead>
+          <tbody>
+            <tr><td>抬頭類型</td><td><span class="badge-y">Y</span></td><td>固定為「公司」</td></tr>
+            <tr><td>買受人名稱（公司抬頭）</td><td><span class="badge-y">Y</span></td><td>公司全名，對應發票「買受人」欄位，不可為空</td></tr>
+            <tr><td>統一編號</td><td><span class="badge-y">Y</span></td><td>8 位純數字，需通過格式驗證</td></tr>
+            <tr><td>買受人地址</td><td><span class="badge-y">Y</span></td><td>公司登記地址，財政部三聯式發票必填欄位</td></tr>
+            <tr><td>買受人電話</td><td><span class="badge-y">Y</span></td><td>公司聯絡電話，財政部三聯式發票必填欄位</td></tr>
+            <tr><td>電子信箱</td><td><span class="badge-y">Y</span></td><td>發票寄送用</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- S4 -->
+    <section id="s01-s4">
+      <h2><span class="section-num">4</span> 開票流程</h2>
+      <hr class="section-divider">
+
+      <h3 id="s01-s4-1">4.1 正常流程（付款前已填妥發票資訊）</h3>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-dot">1</div>
+          <div class="flow-text">使用者完成付款</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot">2</div>
+          <div class="flow-text"><strong>OA Plus</strong> 發送 <code>PAYMENT_SUCCEEDED</code> Webhook <span class="tag tag-line">LINE 規格</span></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot">3</div>
+          <div class="flow-text"><strong>12CM</strong> 接收 Webhook，驗證 <code>X-DX-Signature</code></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot">4</div>
+          <div class="flow-text"><strong>12CM</strong> 呼叫 Retrieve Payment API 取得付款快照</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot branch">5</div>
+          <div class="flow-text">12CM 查詢該 <code>merchantId</code> 是否已有完整發票資料 <span class="tag tag-internal">內部邏輯</span></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot end">6</div>
+          <div class="flow-text"><strong>資料齊全</strong> → 觸發開票，發票寄送至使用者 Email</div>
+        </div>
+      </div>
+
+      <h3 id="s01-s4-2">4.2 延遲開票流程（付款後才補填發票資訊）</h3>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-dot">1</div>
+          <div class="flow-text">使用者完成付款，但尚未填寫發票資訊</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot">2</div>
+          <div class="flow-text"><strong>OA Plus</strong> 發送 <code>PAYMENT_SUCCEEDED</code> Webhook <span class="tag tag-line">LINE 規格</span></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot">3</div>
+          <div class="flow-text">12CM 查詢 <code>merchantId</code> 發票資料 → <strong>資料不齊全</strong></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot branch">4</div>
+          <div class="flow-text">12CM 建立待開票紀錄（<code>status: PENDING</code>）<span class="tag tag-internal">內部邏輯</span></div>
+        </div>
+        <div class="flow-branch">儲存 <code>paymentOrderId</code>、<code>merchantId</code>、付款金額、付款時間</div>
+        <div class="flow-branch">狀態標記為 <code>PENDING</code></div>
+        <div class="flow-step">
+          <div class="flow-dot">5</div>
+          <div class="flow-text">Admin Plugin 顯示補填提示 banner，引導使用者至發票填寫頁</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot">6</div>
+          <div class="flow-text">使用者完成發票資訊填寫並送出</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot branch">7</div>
+          <div class="flow-text">12CM 觸發補開流程 <span class="tag tag-internal">內部邏輯</span></div>
+        </div>
+        <div class="flow-branch">查詢該 <code>merchantId</code> 所有 <code>status = PENDING</code> 紀錄</div>
+        <div class="flow-branch">依序補開發票，成功後更新 <code>status</code> 為 <code>ISSUED</code></div>
+        <div class="flow-step">
+          <div class="flow-dot end">8</div>
+          <div class="flow-text">發票寄送至使用者 Email</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- S5 -->
+    <section id="s01-s5">
+      <h2><span class="section-num">5</span> 待開票紀錄（<code>invoice_pending</code>）資料結構</h2>
+      <hr class="section-divider">
+      <div class="note-internal">⚠ 以下為建議資料結構，需由工程師依實際系統設計調整。</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">類型</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>string</td><td>待開票紀錄唯一 ID</td></tr>
+            <tr><td><code>merchantId</code></td><td>string</td><td>商戶識別碼</td></tr>
+            <tr><td><code>paymentOrderId</code></td><td>string</td><td>對應的 OA Plus 付款訂單 ID</td></tr>
+            <tr><td><code>amount</code></td><td>number</td><td>付款金額（來自 Retrieve Payment API）</td></tr>
+            <tr><td><code>paidAt</code></td><td>timestamp</td><td>付款完成時間</td></tr>
+            <tr><td><code>status</code></td><td>enum</td><td><code>PENDING</code>：待補填 ／ <code>ISSUED</code>：已開立 ／ <code>FAILED</code>：開立失敗</td></tr>
+            <tr><td><code>createdAt</code></td><td>timestamp</td><td>本筆紀錄建立時間</td></tr>
+            <tr><td><code>issuedAt</code></td><td>timestamp</td><td>發票開立時間（ISSUED 後填入）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- S6 -->
+    <section id="s01-s6">
+      <h2><span class="section-num">6</span> 發票資訊填寫頁面規格</h2>
+      <hr class="section-divider">
+
+      <h3 id="s01-s6-1">6.1 表單欄位與驗證規則</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">驗證規則</th><th style="color:#fff;padding:10px 14px;font-weight:600;">錯誤提示文案</th></tr></thead>
+          <tbody>
+            <tr><td>抬頭類型</td><td><span class="badge-y">Y</span></td><td>單選（個人 / 公司）</td><td>—</td></tr>
+            <tr><td>買受人名稱（公司抬頭）</td><td><span class="badge-cond">公司必填</span></td><td>非空字串</td><td>請輸入公司抬頭</td></tr>
+            <tr><td>統一編號</td><td><span class="badge-cond">公司必填</span></td><td><code>/^\d{8}$/</code></td><td>請輸入正確的 8 位統一編號</td></tr>
+            <tr><td>買受人地址</td><td><span class="badge-cond">公司必填</span></td><td>非空字串</td><td>請輸入公司地址</td></tr>
+            <tr><td>買受人電話</td><td><span class="badge-cond">公司必填</span></td><td>非空字串</td><td>請輸入公司電話</td></tr>
+            <tr><td>電子信箱</td><td><span class="badge-y">Y</span></td><td><code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code></td><td>請輸入有效的電子信箱</td></tr>
+            <tr><td>載具類型</td><td><span class="badge-cond">個人必填</span></td><td>單選（Email / 手機條碼）</td><td>—</td></tr>
+            <tr><td>手機條碼</td><td><span class="badge-cond">條件必填</span></td><td><code>/^\/[A-Z0-9]{7}$/</code></td><td>格式應為 /XXXXXXX</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="s01-s6-2">6.2 UI 互動邏輯</h3>
+      <ul class="spec-list">
+        <li>抬頭類型切換為「公司」：隱藏載具設定，顯示買受人名稱、統一編號、買受人地址、買受人電話欄位</li>
+        <li>抬頭類型切換為「個人」：隱藏公司資訊區塊，顯示載具設定</li>
+        <li>載具選擇「手機條碼」：展開條碼輸入欄位</li>
+        <li>送出時進行全欄位驗證，未通過則於對應欄位下方即時顯示錯誤訊息</li>
+        <li>儲存成功後顯示 success banner，3 秒後自動消失</li>
+      </ul>
+
+      <h3 id="s01-s6-3">6.3 補填提示 Banner</h3>
+      <p>若使用者有 <code>PENDING</code> 狀態的待開票紀錄，Admin Plugin 頁面頂部顯示：</p>
+      <div class="callout callout-warning">
+        <strong>提示文案：</strong>您有 N 筆付款尚未完成發票資訊填寫，請前往填寫，填寫完成後系統將自動補開發票。
+      </div>
+
+      <!-- S6 Prototype -->
+      <h3 id="s01-s6-entry">6.4 進入發票管理頁的路徑</h3>
+      <p>使用者進入 12CM 發票填寫頁面有三條路徑，均透過 LINE 端的<strong>連結按鈕跳轉</strong>至 12CM 外部頁面，不在 LINE 頁面內嵌填寫：</p>
+
+      <div style="margin-bottom:28px; overflow-x:auto;">
+        <svg width="100%" viewBox="0 0 680 860" role="img" style="max-width:680px;">
+          <title>付款到發票管理頁流程圖（三條路徑）</title>
+          <desc>使用者從 OA Plus 完成付款後，分為三條路徑：路徑一（付款成功頁連結跳轉）、路徑二（補填）、路徑三（訂閱管理頁更新），最終皆達到發票開立完成的結果。</desc>
+          <defs>
+            <marker id="flow-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+          <style>
+            .fa { stroke:#888780; stroke-width:1; fill:none; marker-end:url(#flow-arrow); }
+            .fa2 { stroke:#888780; stroke-width:1; fill:none; }
+            .nd-gray rect { fill:#F1EFE8; stroke:#5F5E5A; stroke-width:0.5; }
+            .nd-gray text { fill:#2C2C2A; }
+            .nd-teal rect { fill:#E1F5EE; stroke:#0F6E56; stroke-width:0.5; }
+            .nd-teal text { fill:#04342C; }
+            .nd-green rect { fill:#EAF3DE; stroke:#3B6D11; stroke-width:0.5; }
+            .nd-green text { fill:#173404; }
+            .nd-amber rect { fill:#FAEEDA; stroke:#854F0B; stroke-width:0.5; }
+            .nd-amber text { fill:#412402; }
+            .nd-diamond polygon { fill:#F1EFE8; stroke:#5F5E5A; stroke-width:0.5; }
+            .nd-diamond text { fill:#2C2C2A; }
+            .lbl { font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; font-size:13px; fill:#4a5a4a; }
+            .lbl-b { font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; font-size:13px; font-weight:600; fill:#1a1a1a; }
+            .lbl-s { font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; font-size:11px; fill:#6b7280; }
+            .lbl-path1 { font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; font-size:11px; font-weight:700; fill:#185FA5; }
+            .lbl-path2 { font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; font-size:11px; font-weight:700; fill:#854F0B; }
+            .lbl-path3 { font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; font-size:11px; font-weight:700; fill:#185FA5; }
+            .tag-line { font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; font-size:10px; fill:#185FA5; }
+          </style>
+
+          <!-- 起點 -->
+          <g class="nd-gray">
+            <rect x="240" y="20" width="200" height="44" rx="22"/>
+            <text class="lbl-b" x="340" y="42" text-anchor="middle" dominant-baseline="central">使用者完成訂閱付款</text>
+          </g>
+          <line x1="340" y1="64" x2="340" y2="94" class="fa"/>
+
+          <!-- OA Plus Webhook -->
+          <g class="nd-teal">
+            <rect x="210" y="94" width="260" height="44" rx="8"/>
+            <text class="lbl-b" x="340" y="110" text-anchor="middle" dominant-baseline="central">OA Plus 發送</text>
+            <text class="lbl-s" x="340" y="128" text-anchor="middle" dominant-baseline="central">PAYMENT_SUCCEEDED Webhook</text>
+          </g>
+          <text class="tag-line" x="480" y="118" dominant-baseline="central">▸ LINE 規格</text>
+          <line x1="340" y1="138" x2="340" y2="168" class="fa"/>
+
+          <!-- 查詢發票資料 -->
+          <g class="nd-gray">
+            <rect x="210" y="168" width="260" height="44" rx="8"/>
+            <text class="lbl-b" x="340" y="184" text-anchor="middle" dominant-baseline="central">12CM 查詢該商戶</text>
+            <text class="lbl-s" x="340" y="202" text-anchor="middle" dominant-baseline="central">是否已有完整發票資料？</text>
+          </g>
+          <line x1="340" y1="212" x2="340" y2="242" class="fa"/>
+
+          <!-- 判斷菱形 -->
+          <g class="nd-diamond">
+            <polygon points="340,242 392,272 340,302 288,272"/>
+            <text class="lbl-b" x="340" y="272" text-anchor="middle" dominant-baseline="central">資料？</text>
+          </g>
+
+          <!-- 齊全/不齊全標籤 -->
+          <text class="lbl-s" x="233" y="266" text-anchor="middle" dominant-baseline="central">齊全</text>
+          <text class="lbl-s" x="449" y="266" text-anchor="middle" dominant-baseline="central">不齊全</text>
+
+          <!-- 路徑一：左分支 -->
+          <line x1="288" y1="272" x2="158" y2="272" class="fa2" marker-end="url(#flow-arrow)"/>
+          <line x1="158" y1="272" x2="158" y2="330" class="fa"/>
+          <text class="lbl-path1" x="68" y="302" text-anchor="middle" dominant-baseline="central">路徑一</text>
+
+          <g class="nd-green">
+            <rect x="58" y="330" width="200" height="44" rx="8"/>
+            <text class="lbl-b" x="158" y="346" text-anchor="middle" dominant-baseline="central">立即觸發開票</text>
+            <text class="lbl-s" x="158" y="364" text-anchor="middle" dominant-baseline="central">發票寄送至使用者 Email</text>
+          </g>
+          <line x1="158" y1="374" x2="158" y2="422" class="fa"/>
+
+          <g class="nd-green">
+            <rect x="58" y="422" width="200" height="44" rx="22"/>
+            <text class="lbl-b" x="158" y="444" text-anchor="middle" dominant-baseline="central">發票開立完成 ✓</text>
+          </g>
+
+          <!-- 路徑二：右分支 -->
+          <line x1="392" y1="272" x2="522" y2="272" class="fa2" marker-end="url(#flow-arrow)"/>
+          <line x1="522" y1="272" x2="522" y2="330" class="fa"/>
+          <text class="lbl-path2" x="608" y="302" text-anchor="middle" dominant-baseline="central">路徑二</text>
+
+          <g class="nd-amber">
+            <rect x="422" y="330" width="200" height="56" rx="8"/>
+            <text class="lbl-b" x="522" y="346" text-anchor="middle" dominant-baseline="central">建立待開票紀錄</text>
+            <text class="lbl-s" x="522" y="364" text-anchor="middle" dominant-baseline="central">status: PENDING</text>
+            <text class="lbl-s" x="522" y="379" text-anchor="middle" dominant-baseline="central">儲存付款金額與時間</text>
+          </g>
+          <line x1="522" y1="386" x2="522" y2="422" class="fa"/>
+
+          <g class="nd-amber">
+            <rect x="422" y="422" width="200" height="44" rx="8"/>
+            <text class="lbl-b" x="522" y="438" text-anchor="middle" dominant-baseline="central">Admin Plugin 頂部</text>
+            <text class="lbl-s" x="522" y="456" text-anchor="middle" dominant-baseline="central">顯示補填提示 banner</text>
+          </g>
+          <line x1="522" y1="466" x2="522" y2="504" class="fa"/>
+
+          <!-- 第二個判斷菱形 -->
+          <g class="nd-diamond">
+            <polygon points="522,504 572,532 522,560 472,532"/>
+            <text class="lbl-b" x="522" y="532" text-anchor="middle" dominant-baseline="central">使用者？</text>
+          </g>
+
+          <text class="lbl-s" x="428" y="526" text-anchor="end" dominant-baseline="central">立即填寫</text>
+          <text class="lbl-s" x="578" y="521" text-anchor="start" dominant-baseline="central">尚未完成</text>
+          <text class="lbl-s" x="578" y="536" text-anchor="start" dominant-baseline="central">填寫</text>
+
+          <!-- 立即填寫子分支 -->
+          <line x1="472" y1="532" x2="398" y2="532" class="fa2" marker-end="url(#flow-arrow)"/>
+          <line x1="398" y1="532" x2="398" y2="588" class="fa"/>
+
+          <g class="nd-teal">
+            <rect x="308" y="588" width="180" height="44" rx="8"/>
+            <text class="lbl-b" x="398" y="604" text-anchor="middle" dominant-baseline="central">填寫發票資訊</text>
+            <text class="lbl-s" x="398" y="622" text-anchor="middle" dominant-baseline="central">付款後直接跳出表單</text>
+          </g>
+
+          <!-- 尚未完成填寫子分支 -->
+          <line x1="572" y1="532" x2="622" y2="532" class="fa2" marker-end="url(#flow-arrow)"/>
+          <line x1="622" y1="532" x2="622" y2="588" class="fa"/>
+
+          <g class="nd-teal">
+            <rect x="536" y="588" width="172" height="56" rx="8"/>
+            <text class="lbl-b" x="622" y="604" text-anchor="middle" dominant-baseline="central">Echoss VIP 左側選單</text>
+            <text class="lbl-s" x="622" y="622" text-anchor="middle" dominant-baseline="central">點擊「發票管理」</text>
+            <text class="lbl-s" x="622" y="637" text-anchor="middle" dominant-baseline="central">進入管理頁補填</text>
+          </g>
+
+          <!-- 收斂 -->
+          <line x1="398" y1="632" x2="398" y2="706" class="fa"/>
+          <line x1="622" y1="644" x2="622" y2="706" class="fa"/>
+          <line x1="398" y1="706" x2="622" y2="706" class="fa2"/>
+          <line x1="510" y1="706" x2="510" y2="724" class="fa"/>
+
+          <g class="nd-teal">
+            <rect x="360" y="724" width="300" height="44" rx="8"/>
+            <text class="lbl-b" x="510" y="740" text-anchor="middle" dominant-baseline="central">送出發票資訊</text>
+            <text class="lbl-s" x="510" y="758" text-anchor="middle" dominant-baseline="central">系統觸發補開，依序補開所有 PENDING</text>
+          </g>
+          <line x1="510" y1="768" x2="510" y2="796" class="fa"/>
+
+          <g class="nd-green">
+            <rect x="410" y="796" width="200" height="44" rx="22"/>
+            <text class="lbl-b" x="510" y="818" text-anchor="middle" dominant-baseline="central">發票開立完成 ✓</text>
+          </g>
+
+          <!-- 路徑三 label -->
+          <text class="lbl-path3" x="595" y="200" text-anchor="middle" dominant-baseline="central">路徑三</text>
+          <text class="lbl-s" x="595" y="214" text-anchor="middle" dominant-baseline="central">訂閱管理頁</text>
+          <rect x="530" y="226" width="130" height="36" rx="8" fill="#EAF2FD" stroke="#185FA5" stroke-width="0.5"/>
+          <text class="lbl-b" x="595" y="240" text-anchor="middle" dominant-baseline="central" style="fill:#185FA5;">點擊連結按鈕</text>
+          <text class="lbl-s" x="595" y="254" text-anchor="middle" dominant-baseline="central" style="fill:#185FA5;">另開新視窗</text>
+          <line x1="595" y1="262" x2="595" y2="286" style="stroke:#185FA5;stroke-width:1;fill:none;marker-end:url(#flow-arrow);"/>
+          <rect x="530" y="286" width="130" height="36" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+          <text class="lbl-b" x="595" y="300" text-anchor="middle" dominant-baseline="central" style="fill:#173404;">12CM 填寫頁</text>
+          <text class="lbl-s" x="595" y="314" text-anchor="middle" dominant-baseline="central" style="fill:#173404;">更新發票資訊</text>
+
+        </svg>
+      </div>
+
+
+      <div style="margin-bottom:24px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="background:#2d4a2d;color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:4px;white-space:nowrap;">路徑一</div>
+          <div style="font-size:14px;font-weight:600;color:#1a1a1a;">付款成功頁面 — 點擊連結跳轉填寫</div>
+        </div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-dot">1</div>
+            <div class="flow-text">使用者在 OA Plus 完成訂閱付款</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">2</div>
+            <div class="flow-text">LINE <strong>付款成功頁面</strong>顯示連結按鈕：「前往填寫發票資訊」</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">3</div>
+            <div class="flow-text">使用者點擊按鈕，<strong>另開新視窗</strong>跳轉至 12CM 發票填寫頁</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">4</div>
+            <div class="flow-text">使用者在 12CM 頁面填寫發票資訊並送出</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot branch">5</div>
+            <div class="flow-text">系統依抬頭類型判斷開立方式</div>
+          </div>
+          <div class="flow-branch">個人抬頭 → 開立<strong>電子發票</strong>，寄送至填寫的 Email</div>
+          <div class="flow-branch">公司抬頭 → 開立<strong>三聯式統一發票</strong>，寄送至填寫的 Email</div>
+          <div class="flow-step">
+            <div class="flow-dot end">6</div>
+            <div class="flow-text">發票開立完成，狀態更新為 <code>ISSUED</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="background:#4a7c4a;color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:4px;white-space:nowrap;">路徑二</div>
+          <div style="font-size:14px;font-weight:600;color:#1a1a1a;">付款後未填寫，從左側選單進入補填</div>
+        </div>
+        <div class="callout callout-warning" style="margin-bottom:12px;">
+          <strong>觸發條件：</strong>使用者付款完成後未填寫發票資訊即離開，系統已建立 <code>PENDING</code> 待開票紀錄。
+        </div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-dot">1</div>
+            <div class="flow-text">使用者進入 <strong>Echoss VIP</strong> Admin Plugin</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">2</div>
+            <div class="flow-text">點擊左側選單「<strong>發票管理</strong>」</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">3</div>
+            <div class="flow-text">進入發票管理頁面，頁面頂部顯示 <strong>補填提示 banner</strong>（若有 <code>PENDING</code> 紀錄）</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">4</div>
+            <div class="flow-text">頁面呈現<strong>兩個區塊</strong>：</div>
+          </div>
+          <div class="flow-branch">① 發票資訊填寫區 — 填寫或更新發票資料</div>
+          <div class="flow-branch">② 發票開立狀況列表 — 顯示各筆付款的發票狀態（<code>PENDING</code> / <code>ISSUED</code> / <code>FAILED</code>）</div>
+          <div class="flow-step">
+            <div class="flow-dot">5</div>
+            <div class="flow-text">使用者填寫資訊後送出，系統觸發補開流程，將所有 <code>PENDING</code> 紀錄依序補開</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot end">6</div>
+            <div class="flow-text">發票開立完成，列表狀態更新為 <code>ISSUED</code></div>
+          </div>
+        </div>
+      </div>
+
+
+      <div style="margin-bottom:24px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="background:#1565c0;color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:4px;white-space:nowrap;">路徑三</div>
+          <div style="font-size:14px;font-weight:600;color:#1a1a1a;">訂閱管理頁面 — 更新發票資訊</div>
+        </div>
+        <div class="callout callout-warning" style="margin-bottom:12px;">
+          <strong>適用情境：</strong>使用者已完成訂閱，想在下一期扣款前更換載具或更新公司資訊。
+        </div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-dot">1</div>
+            <div class="flow-text">使用者進入 OA Plus <strong>訂閱管理頁面</strong></div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">2</div>
+            <div class="flow-text">頁面顯示「發票資訊」連結按鈕</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">3</div>
+            <div class="flow-text">使用者點擊後<strong>另開新視窗</strong>跳轉至 12CM 發票填寫頁</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot">4</div>
+            <div class="flow-text">使用者更新發票資訊（如更換載具、修改統編）並送出</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-dot end">5</div>
+            <div class="flow-text">12CM 儲存更新資訊，套用至下一期扣款後的開票作業</div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="font-size:14px;margin:0 0 10px;">發票開立狀況列表（路徑二 — 發票管理頁）</h3>
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
+          <tbody>
+            <tr><td>付款日期</td><td>對應的 OA Plus 付款完成時間（<code>paidAt</code>）</td></tr>
+            <tr><td>付款金額</td><td>該筆訂閱付款金額</td></tr>
+            <tr><td>發票狀態</td><td><code>PENDING</code> 待補填 ／ <code>ISSUED</code> 已開立 ／ <code>FAILED</code> 開立失敗</td></tr>
+            <tr><td>發票號碼</td><td>開立成功後顯示，<code>PENDING</code> 時顯示「—」</td></tr>
+            <tr><td>開立日期</td><td>發票實際開立時間（<code>issuedAt</code>），<code>PENDING</code> 時顯示「—」</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="s01-s6-records">6.5 開立紀錄規格</h3>
+      <p>發票管理頁的「開立紀錄」Tab 呈現該商戶所有付款對應的發票開立狀況，工程師須依據以下規格實作列表欄位、狀態邏輯與顯示規則。</p>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;">欄位定義</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位名稱</th><th style="color:#fff;padding:10px 14px;font-weight:600;">資料來源</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">顯示規則</th></tr></thead>
+          <tbody>
+            <tr><td>付款日期</td><td><code>invoice_pending.paidAt</code></td><td><span class="badge-y">Y</span></td><td>格式：<code>YYYY-MM-DD</code>，依付款時間降冪排列</td></tr>
+            <tr><td>付款金額</td><td><code>invoice_pending.amount</code></td><td><span class="badge-y">Y</span></td><td>格式：<code>NT$XXX</code></td></tr>
+            <tr><td>發票狀態</td><td><code>invoice_pending.status</code></td><td><span class="badge-y">Y</span></td><td>見下方狀態說明</td></tr>
+            <tr><td>發票號碼</td><td>開票系統回傳</td><td><span class="badge-n">N</span></td><td><code>ISSUED</code> 後顯示號碼；<code>PENDING</code> / <code>FAILED</code> 顯示「—」</td></tr>
+            <tr><td>開立日期</td><td><code>invoice_pending.issuedAt</code></td><td><span class="badge-n">N</span></td><td><code>ISSUED</code> 後顯示日期；<code>PENDING</code> / <code>FAILED</code> 顯示「—」</td></tr>
+            
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;">發票狀態定義</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">狀態值</th><th style="color:#fff;padding:10px 14px;font-weight:600;">顯示文字</th><th style="color:#fff;padding:10px 14px;font-weight:600;">顯示樣式</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
+          <tbody>
+            <tr><td><code>PENDING</code></td><td>待補填</td><td>黃底深橘字</td><td>發票資料尚未填寫，等待使用者補填後觸發開票</td></tr>
+            <tr><td><code>ISSUED</code></td><td>已開立</td><td>綠底深綠字</td><td>發票已成功開立，發票號碼與開立日期同步顯示</td></tr>
+            <tr><td><code>FAILED</code></td><td>開立失敗</td><td>紅底深紅字</td><td>開票過程發生錯誤，需人工介入處理</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;">排序與分頁規則</h3>
+      <ul class="spec-list">
+        <li>預設依 <code>paidAt</code> <strong>降冪</strong>排列（最新付款在最上方）</li>
+        <li>建議每頁顯示 <strong>10 筆</strong>，超過時提供分頁或無限捲動（待工程確認實作方式）</li>
+        <li><code>PENDING</code> 狀態的紀錄優先置頂，提醒使用者盡快補填</li>
+      </ul>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;">補填後的即時更新行為</h3>
+      <ul class="spec-list">
+        <li>使用者在「發票資訊設定」Tab 送出後，系統觸發補開流程</li>
+        <li>補開完成後，列表中對應的 <code>PENDING</code> 紀錄應即時更新為 <code>ISSUED</code>，並填入發票號碼與開立日期</li>
+        <li>若補開失敗，狀態更新為 <code>FAILED</code>，需人工介入或系統排程重試</li>
+        <li>更新方式：補開 API 回應後前端 re-fetch 列表，或由後端 push 狀態變更（<span class="tag tag-internal">待工程決定實作方式</span>）</li>
+      </ul>
+
+      <div class="callout callout-warning">
+        <strong>注意：</strong>同一筆 <code>paymentOrderId</code> 只能對應一張發票。補開前須確認該筆紀錄狀態為 <code>FAILED</code>，避免重複開票。
+      </div>
+
+      <h3 id="s01-s6-proto">6.6 前端 Prototype</h3>
+      <div class="prototype-wrap">
+        <div class="prototype-header">
+          ▶ 互動原型 — 發票資訊填寫介面
+        </div>
+        <div class="prototype-body">
+
+          <!-- ── PROTOTYPE START ── -->
+          <div style="max-width:560px; margin:0 auto; font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;">
+
+            <div style="background:#fff3e0;border:1px solid #f59e0b;border-radius:6px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:#92400e;display:flex;align-items:flex-start;gap:8px;">
+              <span style="font-size:15px;margin-top:1px;">⚠</span>
+              <span>您有 <strong>2 筆</strong>付款尚未完成發票資訊填寫，填寫完成後系統將自動補開發票。</span>
+            </div>
+
+            <div style="margin-bottom:20px;">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;">發票設定</div>
+              <div style="font-size:18px;font-weight:700;color:#1a1a1a;">填寫發票資訊</div>
+            </div>
+
+            <!-- Type selector -->
+            <div style="background:#fff;border:1px solid #d4e0d4;border-radius:8px;padding:16px;margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:10px;">發票抬頭類型</div>
+              <div style="display:flex;gap:10px;">
+                <label id="p-type-personal" onclick="protoSelect('personal')" style="flex:1;display:flex;align-items:center;gap:10px;padding:12px;border-radius:6px;border:2px solid #3d6b3d;background:#e8f0e8;cursor:pointer;">
+                  <input type="radio" name="p-invoice-type" value="personal" checked style="display:none">
+                  <span style="font-size:18px;">👤</span>
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:#2d4a2d;">個人</div>
+                    <div style="font-size:11px;color:#4a7c4a;">電子發票</div>
+                  </div>
+                </label>
+                <label id="p-type-company" onclick="protoSelect('company')" style="flex:1;display:flex;align-items:center;gap:10px;padding:12px;border-radius:6px;border:1px solid #d4e0d4;background:#fff;cursor:pointer;">
+                  <input type="radio" name="p-invoice-type" value="company" style="display:none">
+                  <span style="font-size:18px;">🏢</span>
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:#1a1a1a;">公司</div>
+                    <div style="font-size:11px;color:#7a8a7a;">三聯式統一發票</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Company fields -->
+            <div id="p-company-section" style="display:none;background:#fff;border:1px solid #d4e0d4;border-radius:8px;padding:16px;margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:12px;">公司資訊</div>
+              <div style="margin-bottom:12px;">
+                <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:5px;">買受人名稱（公司抬頭） <span style="color:#dc2626;">*</span></label>
+                <input type="text" id="p-company-name" placeholder="請輸入公司全名" style="width:100%;padding:8px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;outline:none;">
+                <div id="p-company-name-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入公司抬頭</div>
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:5px;">統一編號 <span style="color:#dc2626;">*</span></label>
+                <input type="text" id="p-tax-id" placeholder="12345678" maxlength="8" style="width:100%;padding:8px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;">
+                <div id="p-tax-id-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入正確的 8 位統一編號</div>
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:5px;">買受人地址 <span style="color:#dc2626;">*</span></label>
+                <input type="text" id="p-company-addr" placeholder="請輸入公司登記地址" style="width:100%;padding:8px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;outline:none;">
+                <div id="p-company-addr-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入公司地址</div>
+              </div>
+              <div>
+                <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:5px;">買受人電話 <span style="color:#dc2626;">*</span></label>
+                <input type="tel" id="p-company-tel" placeholder="02-12345678" style="width:100%;padding:8px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;outline:none;">
+                <div id="p-company-tel-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入公司電話</div>
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div style="background:#fff;border:1px solid #d4e0d4;border-radius:8px;padding:16px;margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:12px;">發票寄送資訊</div>
+              <div style="margin-bottom:12px;">
+                <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:5px;">電子信箱 <span style="color:#dc2626;">*</span></label>
+                <input type="email" id="p-email" placeholder="invoice@yourcompany.com" style="width:100%;padding:8px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;outline:none;">
+                <div id="p-email-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入有效的電子信箱</div>
+              </div>
+              
+            </div>
+
+            <!-- Carrier -->
+            <div id="p-carrier-section" style="background:#fff;border:1px solid #d4e0d4;border-radius:8px;padding:16px;margin-bottom:20px;">
+              <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:10px;">載具設定 <span style="font-weight:400;color:#9ca3af;">（個人發票適用）</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <label id="p-carrier-email" onclick="protoCarrier('email')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;border:2px solid #3d6b3d;background:#e8f0e8;cursor:pointer;">
+                  <input type="radio" name="p-carrier" value="email" checked style="display:none">
+                  <span>✉</span><span style="font-size:13px;color:#2d4a2d;">Email 寄送（會員載具）</span>
+                </label>
+                <label id="p-carrier-barcode" onclick="protoCarrier('barcode')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;border:1px solid #d4e0d4;background:#fff;cursor:pointer;">
+                  <input type="radio" name="p-carrier" value="barcode" style="display:none">
+                  <span>📱</span><span style="font-size:13px;color:#1a1a1a;">手機條碼載具</span>
+                </label>
+                <div id="p-barcode-wrap" style="display:none;padding-left:36px;">
+                  <input type="text" id="p-barcode" placeholder="/XXXXXXX（共 8 碼含斜線）" maxlength="8" style="width:100%;padding:8px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;">
+                  <div id="p-barcode-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">格式應為 /XXXXXXX</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Carrier disabled for company -->
+            <div id="p-carrier-disabled" style="display:none;background:#f8f9fa;border:1px solid #d4e0d4;border-radius:8px;padding:14px 16px;margin-bottom:20px;">
+              <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">載具設定</div>
+              <div style="font-size:13px;color:#9ca3af;">公司抬頭發票不適用載具設定</div>
+            </div>
+
+            <!-- Success banner -->
+            <div id="p-success" style="display:none;background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#166534;align-items:center;gap:8px;">
+              ✓ 發票資訊已儲存成功
+            </div>
+
+            <!-- Buttons -->
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+              <button onclick="protoCancel()" style="padding:8px 18px;border:1px solid #d4e0d4;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;color:#4a5a4a;">取消</button>
+              <button onclick="protoSubmit()" style="padding:8px 20px;border:none;border-radius:6px;background:#2d4a2d;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">儲存發票資訊</button>
+            </div>
+
+          </div>
+          <!-- ── PROTOTYPE END ── -->
+
+          <script>
+            function protoSelect(type) {
+              const pEl = document.getElementById('p-type-personal');
+              const cEl = document.getElementById('p-type-company');
+              const cSec = document.getElementById('p-company-section');
+              const carrSec = document.getElementById('p-carrier-section');
+              const carrDis = document.getElementById('p-carrier-disabled');
+              if (type === 'personal') {
+                pEl.style.border = '2px solid #3d6b3d'; pEl.style.background = '#e8f0e8';
+                pEl.querySelector('div div:first-child').style.color = '#2d4a2d';
+                cEl.style.border = '1px solid #d4e0d4'; cEl.style.background = '#fff';
+                cEl.querySelector('div div:first-child').style.color = '#1a1a1a';
+                cSec.style.display = 'none'; carrSec.style.display = 'block'; carrDis.style.display = 'none';
+              } else {
+                cEl.style.border = '2px solid #3d6b3d'; cEl.style.background = '#e8f0e8';
+                cEl.querySelector('div div:first-child').style.color = '#2d4a2d';
+                pEl.style.border = '1px solid #d4e0d4'; pEl.style.background = '#fff';
+                pEl.querySelector('div div:first-child').style.color = '#1a1a1a';
+                cSec.style.display = 'block'; carrSec.style.display = 'none'; carrDis.style.display = 'block';
+              }
+            }
+            function protoCarrier(type) {
+              const eEl = document.getElementById('p-carrier-email');
+              const bEl = document.getElementById('p-carrier-barcode');
+              const bWrap = document.getElementById('p-barcode-wrap');
+              if (type === 'email') {
+                eEl.style.border = '2px solid #3d6b3d'; eEl.style.background = '#e8f0e8';
+                bEl.style.border = '1px solid #d4e0d4'; bEl.style.background = '#fff';
+                bWrap.style.display = 'none';
+              } else {
+                bEl.style.border = '2px solid #3d6b3d'; bEl.style.background = '#e8f0e8';
+                eEl.style.border = '1px solid #d4e0d4'; eEl.style.background = '#fff';
+                bWrap.style.display = 'block';
+              }
+            }
+            function showErr(id, show) { document.getElementById(id).style.display = show ? 'block' : 'none'; }
+            function protoSubmit() {
+              const type = document.querySelector('input[name="p-invoice-type"]:checked').value;
+              const email = document.getElementById('p-email').value.trim();
+              let valid = true;
+              if (type === 'company') {
+                const cn = document.getElementById('p-company-name').value.trim();
+                const tx = document.getElementById('p-tax-id').value.trim();
+                if (!cn) { showErr('p-company-name-err', true); valid = false; } else showErr('p-company-name-err', false);
+                if (!/^\d{8}$/.test(tx)) { showErr('p-tax-id-err', true); valid = false; } else showErr('p-tax-id-err', false);
+              }
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('p-email-err', true); valid = false; } else showErr('p-email-err', false);
+              const carrier = document.querySelector('input[name="p-carrier"]:checked');
+              if (type === 'personal' && carrier && carrier.value === 'barcode') {
+                const bc = document.getElementById('p-barcode').value.trim();
+                if (!/^\/[A-Z0-9]{7}$/.test(bc)) { showErr('p-barcode-err', true); valid = false; } else showErr('p-barcode-err', false);
+              }
+              if (!valid) return;
+              const s = document.getElementById('p-success');
+              s.style.display = 'flex';
+              setTimeout(() => { s.style.display = 'none'; }, 3000);
+            }
+            function protoCancel() { alert('取消填寫，發票將維持待補填狀態。'); }
+          </script>
+        </div>
+      </div>
+
+      <h3 id="s01-s6-mgmt">6.7 Prototype — 發票管理頁（左側選單入口）</h3>
+      <p>模擬使用者從 Echoss VIP 左側選單進入「發票管理」後看到的頁面，包含補填 banner、發票資訊填寫區，以及各筆付款的發票開立狀況列表。</p>
+      <div class="prototype-wrap">
+        <div class="prototype-header">
+          ▶ 互動原型 — 發票管理頁（左側選單入口）
+        </div>
+        <div class="prototype-body" style="padding:0;">
+
+<!-- MGMT PROTO -->
+<div style="display:flex;min-height:560px;font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;font-size:13px;">
+
+  <!-- Sidebar mock -->
+  <div style="width:160px;min-width:160px;background:#1a2e1a;color:#fff;display:flex;flex-direction:column;">
+    <div style="padding:14px 16px 10px;font-size:13px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1);">Echoss VIP</div>
+    <nav style="padding:8px 0;flex:1;">
+      <div style="padding:8px 14px;font-size:12px;color:rgba(255,255,255,0.45);">主選單</div>
+      <a style="display:block;padding:8px 14px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:12.5px;">歡迎</a>
+      <a style="display:block;padding:8px 14px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:12.5px;">功能模組</a>
+      <a style="display:block;padding:8px 14px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:12.5px;">會員管理</a>
+      <a style="display:block;padding:8px 14px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:12.5px;">門店管理</a>
+      <a style="display:block;padding:8px 14px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:12.5px;">下載區</a>
+      <a style="display:block;padding:8px 14px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:12.5px;">使用手冊</a>
+      <a id="mgmt-menu-link" onclick="mgmtShowPage()" style="display:block;padding:8px 14px;background:#3d6b3d;color:#fff;text-decoration:none;font-size:12.5px;font-weight:600;border-left:3px solid #7ec87e;cursor:pointer;">發票管理</a>
+    </nav>
+  </div>
+
+  <!-- Main area -->
+  <div style="flex:1;background:#f7faf7;overflow-y:auto;">
+
+    <!-- State A: before entering -->
+    <div id="mgmt-state-a" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#9ca3af;">
+      <div style="font-size:32px;">←</div>
+      <div style="font-size:13px;">點擊左側「發票管理」進入</div>
+    </div>
+
+    <!-- State B: invoice management page -->
+    <div id="mgmt-state-b" style="display:none;padding:24px 28px;">
+
+      <!-- Pending banner -->
+      <div id="mgmt-banner" style="background:#fff3e0;border:1px solid #f59e0b;border-radius:6px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:#92400e;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <span style="margin-top:1px;">⚠</span>
+          <span>您有 <strong>2 筆</strong>付款尚未完成發票資訊填寫，填寫完成後系統將自動補開發票。</span>
+        </div>
+        <span onclick="document.getElementById('mgmt-banner').style.display='none'" style="cursor:pointer;font-size:16px;line-height:1;opacity:0.6;flex-shrink:0;">×</span>
+      </div>
+
+      <div style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:20px;">發票管理</div>
+
+      <!-- Tab switcher -->
+      <div style="display:flex;border-bottom:2px solid #d4e0d4;margin-bottom:20px;gap:0;">
+        <div id="mgmt-tab-form" onclick="mgmtTab('form')" style="padding:8px 18px;font-size:13px;font-weight:600;color:#2d4a2d;border-bottom:2px solid #2d4a2d;margin-bottom:-2px;cursor:pointer;">發票資訊設定</div>
+        <div id="mgmt-tab-list" onclick="mgmtTab('list')" style="padding:8px 18px;font-size:13px;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">開立紀錄</div>
+      </div>
+
+      <!-- Tab: form -->
+      <div id="mgmt-panel-form">
+        <div style="background:#fff;border:1px solid #d4e0d4;border-radius:8px;padding:18px;margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:12px;">發票抬頭類型</div>
+          <div style="display:flex;gap:10px;">
+            <label id="m-type-personal" onclick="mgmtTypeSelect('personal')" style="flex:1;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;border:2px solid #3d6b3d;background:#e8f0e8;cursor:pointer;">
+              <input type="radio" name="m-invoice-type" value="personal" checked style="display:none">
+              <span>👤</span>
+              <div><div style="font-size:13px;font-weight:600;color:#2d4a2d;">個人</div><div style="font-size:11px;color:#4a7c4a;">電子發票</div></div>
+            </label>
+            <label id="m-type-company" onclick="mgmtTypeSelect('company')" style="flex:1;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;border:1px solid #d4e0d4;background:#fff;cursor:pointer;">
+              <input type="radio" name="m-invoice-type" value="company" style="display:none">
+              <span>🏢</span>
+              <div><div style="font-size:13px;font-weight:600;color:#1a1a1a;">公司</div><div style="font-size:11px;color:#7a8a7a;">三聯式統一發票</div></div>
+            </label>
+          </div>
+        </div>
+
+        <div id="m-company-section" style="display:none;background:#fff;border:1px solid #d4e0d4;border-radius:8px;padding:18px;margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:12px;">公司資訊</div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:4px;">買受人名稱（公司抬頭） <span style="color:#dc2626;">*</span></label>
+            <input id="m-company-name" type="text" placeholder="請輸入公司全名" style="width:100%;padding:7px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;">
+            <div id="m-cn-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入公司抬頭</div>
+          </div>
+          <div>
+            <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:4px;">統一編號 <span style="color:#dc2626;">*</span></label>
+            <input id="m-tax-id" type="text" placeholder="12345678" maxlength="8" style="width:100%;padding:7px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;font-family:monospace;box-sizing:border-box;">
+            <div id="m-tax-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入正確的 8 位統一編號</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <label style="font-size:12px;font-weight:600;color:#4a5a4a;display:block;margin-bottom:4px;">買受人地址 <span style="color:#dc2626;">*</span></label>
+            <input id="m-company-addr" type="text" placeholder="請輸入公司登記地址" style="width:100%;padding:7px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;">
+            <div id="m-addr-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入公司地址</div>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#4a5a4a;display:block;margin-bottom:4px;">買受人電話 <span style="color:#dc2626;">*</span></label>
+            <input id="m-company-tel" type="tel" placeholder="02-12345678" style="width:100%;padding:7px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;">
+            <div id="m-tel-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入公司電話</div>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #d4e0d4;border-radius:8px;padding:18px;margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:12px;">發票寄送資訊</div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:4px;">電子信箱 <span style="color:#dc2626;">*</span></label>
+            <input id="m-email" type="email" placeholder="invoice@yourcompany.com" style="width:100%;padding:7px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;">
+            <div id="m-email-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">請輸入有效的電子信箱</div>
+          </div>
+          <div>
+            <label style="font-size:12px;color:#4a5a4a;display:block;margin-bottom:4px;">聯絡電話 <span style="font-size:11px;color:#9ca3af;">（選填）</span></label>
+            <input type="tel" placeholder="0912345678" style="width:100%;padding:7px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;box-sizing:border-box;">
+          </div>
+        </div>
+
+        <div id="m-carrier-section" style="background:#fff;border:1px solid #d4e0d4;border-radius:8px;padding:18px;margin-bottom:20px;">
+          <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:10px;">載具設定 <span style="font-weight:400;color:#9ca3af;">（個人發票適用）</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label id="m-c-email" onclick="mgmtCarrier('email')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;border:2px solid #3d6b3d;background:#e8f0e8;cursor:pointer;">
+              <input type="radio" name="m-carrier" value="email" checked style="display:none">
+              <span>✉</span><span style="font-size:13px;color:#2d4a2d;">Email 寄送（會員載具）</span>
+            </label>
+            <label id="m-c-barcode" onclick="mgmtCarrier('barcode')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;border:1px solid #d4e0d4;background:#fff;cursor:pointer;">
+              <input type="radio" name="m-carrier" value="barcode" style="display:none">
+              <span>📱</span><span style="font-size:13px;color:#1a1a1a;">手機條碼載具</span>
+            </label>
+            <div id="m-barcode-wrap" style="display:none;padding-left:36px;">
+              <input id="m-barcode" type="text" placeholder="/XXXXXXX" maxlength="8" style="width:100%;padding:7px 10px;border:1px solid #d4e0d4;border-radius:5px;font-size:13px;font-family:monospace;box-sizing:border-box;">
+              <div id="m-barcode-err" style="display:none;font-size:11px;color:#dc2626;margin-top:3px;">格式應為 /XXXXXXX</div>
+            </div>
+          </div>
+        </div>
+        <div id="m-carrier-disabled" style="display:none;background:#f8f9fa;border:1px solid #d4e0d4;border-radius:8px;padding:14px;margin-bottom:20px;">
+          <div style="font-size:12px;color:#9ca3af;">公司抬頭發票不適用載具設定</div>
+        </div>
+
+        <div id="m-save-success" style="display:none;background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#166534;">✓ 發票資訊已儲存，系統正在補開所有待開發票…</div>
+
+        <div style="display:flex;justify-content:flex-end;">
+          <button onclick="mgmtSave()" style="padding:8px 20px;border:none;border-radius:6px;background:#2d4a2d;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">儲存並補開發票</button>
+        </div>
+      </div>
+
+      <!-- Tab: list -->
+      <div id="mgmt-panel-list" style="display:none;">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:#3d6b3d;">
+                <th style="padding:9px 12px;text-align:left;color:#fff;font-weight:600;white-space:nowrap;">付款日期</th>
+                <th style="padding:9px 12px;text-align:left;color:#fff;font-weight:600;">付款金額</th>
+                <th style="padding:9px 12px;text-align:left;color:#fff;font-weight:600;">發票狀態</th>
+                <th style="padding:9px 12px;text-align:left;color:#fff;font-weight:600;">發票號碼</th>
+                <th style="padding:9px 12px;text-align:left;color:#fff;font-weight:600;">開立日期</th>
+              </tr>
+            </thead>
+            <tbody id="mgmt-table-body">
+              <tr style="background:#f4f8f4;">
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">2026-05-15</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">NT$299</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;"><span style="background:#fef9c3;color:#854d0e;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">待補填</span></td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#9ca3af;">—</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#9ca3af;">—</td>
+                
+              </tr>
+              <tr>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">2026-04-15</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">NT$299</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;"><span style="background:#fee2e2;color:#991b1b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">開立失敗</span></td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#9ca3af;">—</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#9ca3af;">—</td>
+                
+              </tr>
+              <tr style="background:#f4f8f4;">
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">2026-03-15</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">NT$299</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;"><span style="background:#dcfce7;color:#166534;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">已開立</span></td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;font-family:monospace;">AB-12345678</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">2026-03-15</td>
+                
+              </tr>
+              <tr>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">2026-02-15</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">NT$299</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;"><span style="background:#dcfce7;color:#166534;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">已開立</span></td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;font-family:monospace;">AB-12345677</td>
+                <td style="padding:9px 12px;border-bottom:1px solid #d4e0d4;color:#4a5a4a;">2026-02-15</td>
+                
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function mgmtShowPage() {
+  document.getElementById('mgmt-state-a').style.display = 'none';
+  document.getElementById('mgmt-state-b').style.display = 'block';
+}
+function mgmtTab(tab) {
+  const isForm = tab === 'form';
+  document.getElementById('mgmt-panel-form').style.display = isForm ? 'block' : 'none';
+  document.getElementById('mgmt-panel-list').style.display = isForm ? 'none' : 'block';
+  document.getElementById('mgmt-tab-form').style.color = isForm ? '#2d4a2d' : '#6b7280';
+  document.getElementById('mgmt-tab-form').style.borderBottom = isForm ? '2px solid #2d4a2d' : '2px solid transparent';
+  document.getElementById('mgmt-tab-form').style.fontWeight = isForm ? '600' : '400';
+  document.getElementById('mgmt-tab-list').style.color = isForm ? '#6b7280' : '#2d4a2d';
+  document.getElementById('mgmt-tab-list').style.borderBottom = isForm ? '2px solid transparent' : '2px solid #2d4a2d';
+  document.getElementById('mgmt-tab-list').style.fontWeight = isForm ? '400' : '600';
+}
+function mgmtTypeSelect(type) {
+  const pEl = document.getElementById('m-type-personal');
+  const cEl = document.getElementById('m-type-company');
+  const cSec = document.getElementById('m-company-section');
+  const cs = document.getElementById('m-carrier-section');
+  const cd = document.getElementById('m-carrier-disabled');
+  if (type === 'personal') {
+    pEl.style.border = '2px solid #3d6b3d'; pEl.style.background = '#e8f0e8';
+    cEl.style.border = '1px solid #d4e0d4'; cEl.style.background = '#fff';
+    cSec.style.display = 'none'; cs.style.display = 'block'; cd.style.display = 'none';
+  } else {
+    cEl.style.border = '2px solid #3d6b3d'; cEl.style.background = '#e8f0e8';
+    pEl.style.border = '1px solid #d4e0d4'; pEl.style.background = '#fff';
+    cSec.style.display = 'block'; cs.style.display = 'none'; cd.style.display = 'block';
+  }
+}
+function mgmtCarrier(type) {
+  const eEl = document.getElementById('m-c-email');
+  const bEl = document.getElementById('m-c-barcode');
+  const bw = document.getElementById('m-barcode-wrap');
+  if (type === 'email') {
+    eEl.style.border = '2px solid #3d6b3d'; eEl.style.background = '#e8f0e8';
+    bEl.style.border = '1px solid #d4e0d4'; bEl.style.background = '#fff';
+    bw.style.display = 'none';
+  } else {
+    bEl.style.border = '2px solid #3d6b3d'; bEl.style.background = '#e8f0e8';
+    eEl.style.border = '1px solid #d4e0d4'; eEl.style.background = '#fff';
+    bw.style.display = 'block';
+  }
+}
+function mgmtSave() {
+  const type = document.querySelector('input[name="m-invoice-type"]:checked').value;
+  const email = document.getElementById('m-email').value.trim();
+  let valid = true;
+  if (type === 'company') {
+    const cn = document.getElementById('m-company-name').value.trim();
+    const tx = document.getElementById('m-tax-id').value.trim();
+    document.getElementById('m-cn-err').style.display = !cn ? 'block' : 'none';
+    document.getElementById('m-tax-err').style.display = !/^\d{8}$/.test(tx) ? 'block' : 'none';
+    if (!cn || !/^\d{8}$/.test(tx)) valid = false;
+  }
+  document.getElementById('m-email-err').style.display = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'block' : 'none';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) valid = false;
+  const carrier = document.querySelector('input[name="m-carrier"]:checked');
+  if (type === 'personal' && carrier && carrier.value === 'barcode') {
+    const bc = document.getElementById('m-barcode').value.trim();
+    document.getElementById('m-barcode-err').style.display = !/^\/[A-Z0-9]{7}$/.test(bc) ? 'block' : 'none';
+    if (!/^\/[A-Z0-9]{7}$/.test(bc)) valid = false;
+  }
+  if (!valid) return;
+  document.getElementById('mgmt-banner').style.display = 'none';
+  const s = document.getElementById('m-save-success');
+  s.style.display = 'block';
+  // Update table: flip PENDING rows to ISSUED
+  setTimeout(() => {
+    const rows = document.querySelectorAll('#mgmt-table-body tr');
+    rows.forEach(row => {
+      const badge = row.querySelector('span');
+      if (badge && badge.textContent === '待補填') {
+        badge.textContent = '已開立';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#166534';
+        const cells = row.querySelectorAll('td');
+        cells[3].textContent = 'AB-' + (10000000 + Math.floor(Math.random()*9000000));
+        const today = new Date();
+        cells[4].textContent = today.toISOString().slice(0,10);
+        cells[4].style.color = '#4a5a4a';
+      }
+    });
+    s.textContent = '✓ 所有發票已補開完成，請至「開立紀錄」查看。';
+  }, 1200);
+}
+</script>
+<script>
+// ── Spec 01 Registration Prototype JS ──
+
+  var regCurrentType    = 'personal';
+  var regCurrentCarrier = 'email';
+
+  function regSyncEmail() {
+    var src  = document.getElementById('reg-contact-email').value;
+    var dest = document.getElementById('reg-inv-email');
+    dest.value = src;
+  }
+
+  function regSyncCompanyName() {
+    if (regCurrentType === 'company') {
+      var src  = document.getElementById('reg-company-name').value;
+      var dest = document.getElementById('reg-buyer-name');
+      if (!dest._manuallyEdited) dest.value = src;
+    }
+  }
+
+  (function() {
+    var bn = document.getElementById('reg-buyer-name');
+    if (bn) bn.addEventListener('input', function() { bn._manuallyEdited = true; });
+  })();
+
+  function regSwitchType(type) {
+    regCurrentType = type;
+    var pBlock = document.getElementById('reg-personal-block');
+    var cBlock = document.getElementById('reg-company-block');
+    var pBtn   = document.getElementById('reg-type-personal-btn');
+    var cBtn   = document.getElementById('reg-type-company-btn');
+    if (type === 'personal') {
+      pBlock.classList.remove('reg-hidden');
+      cBlock.classList.add('reg-hidden');
+      pBtn.classList.add('active'); cBtn.classList.remove('active');
+    } else {
+      pBlock.classList.add('reg-hidden');
+      cBlock.classList.remove('reg-hidden');
+      cBtn.classList.add('active'); pBtn.classList.remove('active');
+      var comp = document.getElementById('reg-company-name').value;
+      var bn   = document.getElementById('reg-buyer-name');
+      if (comp && !bn._manuallyEdited) bn.value = comp;
+    }
+    regClearAllErrors();
+  }
+
+  function regSwitchCarrier(carrier) {
+    regCurrentCarrier = carrier;
+    var bf   = document.getElementById('reg-barcode-field');
+    var eBtn = document.getElementById('reg-carrier-email-btn');
+    var bBtn = document.getElementById('reg-carrier-barcode-btn');
+    if (carrier === 'barcode') {
+      bf.classList.remove('reg-hidden');
+      bBtn.classList.add('active'); eBtn.classList.remove('active');
+    } else {
+      bf.classList.add('reg-hidden');
+      eBtn.classList.add('active'); bBtn.classList.remove('active');
+      regClearError('reg-barcode', 'reg-barcode-err');
+    }
+  }
+
+  function regCheckDuplicate() {
+    var val = document.getElementById('reg-brand-code').value.trim();
+    var dup = document.getElementById('reg-brand-code-dup');
+    var inp = document.getElementById('reg-brand-code');
+    if (!val) return;
+    var isDup = /1$|test$/i.test(val);
+    if (isDup) { dup.classList.add('visible'); inp.classList.add('reg-error'); }
+    else       { dup.classList.remove('visible'); inp.classList.remove('reg-error'); }
+  }
+
+  function regShowError(fieldId, errId, msg) {
+    var el  = document.getElementById(fieldId);
+    var err = document.getElementById(errId);
+    if (el)  el.classList.add('reg-error');
+    if (err) { if (msg) err.textContent = msg; err.classList.add('visible'); }
+  }
+  function regClearError(fieldId, errId) {
+    var el  = document.getElementById(fieldId);
+    var err = document.getElementById(errId);
+    if (el)  el.classList.remove('reg-error');
+    if (err) err.classList.remove('visible');
+  }
+  function regClearAllErrors() {
+    document.querySelectorAll('.reg-error').forEach(function(el){ el.classList.remove('reg-error'); });
+    document.querySelectorAll('.reg-err-msg.visible').forEach(function(el){ el.classList.remove('visible'); });
+    document.querySelectorAll('.reg-dup-badge.visible').forEach(function(el){ el.classList.remove('visible'); });
+  }
+
+  var regEmailRe   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var regBarcodeRe = /^\/[A-Z0-9]{7}$/;
+  var regTaxIdRe   = /^\d{8}$/;
+
+  function regSubmit() {
+    var ok = true;
+    regClearAllErrors();
+
+    if (!document.getElementById('reg-brand-name').value.trim())
+      { regShowError('reg-brand-name','reg-brand-name-err'); ok=false; }
+    if (!document.getElementById('reg-brand-code').value.trim())
+      { regShowError('reg-brand-code','reg-brand-code-err'); ok=false; }
+    if (!document.getElementById('reg-company-name').value.trim())
+      { regShowError('reg-company-name','reg-company-name-err'); ok=false; }
+    if (!document.getElementById('reg-contact-name').value.trim())
+      { regShowError('reg-contact-name','reg-contact-name-err'); ok=false; }
+
+    var ce = document.getElementById('reg-contact-email').value.trim();
+    if (!ce || !regEmailRe.test(ce))
+      { regShowError('reg-contact-email','reg-contact-email-err'); ok=false; }
+
+    var ie = document.getElementById('reg-inv-email').value.trim();
+    if (!ie || !regEmailRe.test(ie))
+      { regShowError('reg-inv-email','reg-inv-email-err'); ok=false; }
+
+    if (regCurrentType === 'personal') {
+      if (regCurrentCarrier === 'barcode') {
+        var bc = document.getElementById('reg-barcode').value.trim();
+        if (!bc || !regBarcodeRe.test(bc))
+          { regShowError('reg-barcode','reg-barcode-err','格式應為 /XXXXXXX'); ok=false; }
+      }
+    } else {
+      if (!document.getElementById('reg-buyer-name').value.trim())
+        { regShowError('reg-buyer-name','reg-buyer-name-err'); ok=false; }
+      var tid = document.getElementById('reg-tax-id').value.trim();
+      if (!tid || !regTaxIdRe.test(tid))
+        { regShowError('reg-tax-id','reg-tax-id-err'); ok=false; }
+      if (!document.getElementById('reg-buyer-addr').value.trim())
+        { regShowError('reg-buyer-addr','reg-buyer-addr-err'); ok=false; }
+      if (!document.getElementById('reg-buyer-phone').value.trim())
+        { regShowError('reg-buyer-phone','reg-buyer-phone-err'); ok=false; }
+    }
+
+    if (!ok) {
+      var fe = document.querySelector('.reg-error');
+      if (fe) fe.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    var toast = document.getElementById('reg-toast');
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 3000);
+  }
+
+</script>
+<!-- END MGMT PROTO -->
+
+        </div>
+      </div>
+    </section>
+
+    <!-- S7 -->
+    <section id="s01-s7">
+      <h2><span class="section-num">7</span> Webhook 接收規格 <span class="tag tag-line">LINE 規格</span></h2>
+      <hr class="section-divider">
+
+      <h3 id="s01-s7-1">7.1 事件類型</h3>
+      <p>使用 <code>PAYMENT_SUCCEEDED</code> 事件作為開票流程觸發點。</p>
+
+      <h3 id="s01-s7-2">7.2 Payload 欄位</h3>
+      <pre>{
+  "eventType": "PAYMENT_SUCCEEDED",
+  "eventId": "evt-002",
+  "pluginId": "testplugin",
+  "merchantId": "@merchant123",
+  "paymentOrderId": "pay-001",
+  "paymentStatus": "SUCCESS",
+  "sentAt": "2026-03-30T16:40:00Z"
+}</pre>
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">類型</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">說明</th></tr></thead>
+          <tbody>
+            <tr><td><code>eventType</code></td><td>string</td><td><span class="badge-y">Y</span></td><td>固定為 <code>PAYMENT_SUCCEEDED</code></td></tr>
+            <tr><td><code>eventId</code></td><td>string</td><td><span class="badge-y">Y</span></td><td>此事件唯一識別碼</td></tr>
+            <tr><td><code>pluginId</code></td><td>string</td><td><span class="badge-y">Y</span></td><td>Plugin 識別碼</td></tr>
+            <tr><td><code>merchantId</code></td><td>string</td><td><span class="badge-y">Y</span></td><td>商戶識別碼</td></tr>
+            <tr><td><code>paymentOrderId</code></td><td>string</td><td><span class="badge-y">Y</span></td><td>付款訂單 ID，用於查詢明細</td></tr>
+            <tr><td><code>paymentStatus</code></td><td>string</td><td><span class="badge-y">Y</span></td><td>例如 <code>SUCCESS</code></td></tr>
+            <tr><td><code>sentAt</code></td><td>Timestamp</td><td><span class="badge-y">Y</span></td><td>ISO 8601 UTC</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="s01-s7-3">7.3 Signature 驗證</h3>
+      <pre>X-DX-Signature: sha256={HMAC-SHA256 of raw request body}</pre>
+      <p>12CM 必須用 <strong>Secret of Admin Plugin</strong> 驗證簽章：</p>
+      <pre>String expectedSig = "sha256=" + hmacSha256(rawBody, secret);
+if (!MessageDigest.isEqual(expectedSig.getBytes(), receivedSig.getBytes())) {
+    throw new UnauthorizedException("Invalid signature");
+}</pre>
+    </section>
+
+    <!-- S8 -->
+    <section id="s01-s8">
+      <h2><span class="section-num">8</span> Open API 查詢付款明細 <span class="tag tag-line">LINE 規格</span></h2>
+      <hr class="section-divider">
+      <p>收到 Webhook 後，12CM 需呼叫 <strong>Retrieve Payment API</strong> 取得完整付款快照，作為後續開票與帳務處理依據。</p>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><td>Swagger</td><td><code style="word-break:break-all;font-size:12px;">https://vos.line-scdn.net/oa-plus-dx-swagger-ui-web/index.html?urls.primaryName=Staging#/Plugin%20Payment/getPluginPaymentDetails</code></td></tr>
+            <tr><td>環境</td><td>Staging only（目前）</td></tr>
+            <tr><td>用途</td><td>取得付款快照資料，作為後續開票與帳務處理依據</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- S8b -->
+    <section id="s01-s8b">
+      <h2><span class="section-num">8.2</span> 12CM 發票開立 API</h2>
+      <hr class="section-divider">
+      <div class="callout callout-note">
+        <strong>內部邏輯</strong>：12CM 擁有自有的發票開立 API 與字軌管理機制，無需依賴第三方發票服務。本節說明開票流程的關鍵決策。
+      </div>
+
+      <h3>開票金額來源</h3>
+      <p>使用 Retrieve Payment API 回傳的付款金額，該金額為<strong>含稅金額</strong>，直接用於開票，不需另行計算稅額。</p>
+
+      <h3>開票觸發時機</h3>
+      <p>使用者填寫完發票資訊送出後<strong>立即觸發</strong>開票 API，不採用非同步排程。</p>
+
+      <h3>開票失敗處理</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">情境</th><th style="color:#fff;padding:10px 14px;font-weight:600;">處理方式</th><th style="color:#fff;padding:10px 14px;font-weight:600;">使用者介面</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>開票 API 失敗</td>
+              <td>每 <strong>3 分鐘</strong> retry 一次，寫入告警報告</td>
+              <td>不顯示失敗狀態</td>
+            </tr>
+            <tr>
+              <td>Email 寄送失敗</td>
+              <td>寫入告警報告</td>
+              <td>不顯示失敗狀態</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:13px;color:#666;margin-top:8px;">告警報告供工程師排查用，不對外呈現。</p>
+    </section>
+
+    <!-- S6b 註冊頁發票專區 -->
+    <style>#panel-01 #s01-s6b thead th, #panel-01 #s01-s6b table thead tr th { color: #fff !important; background: #3d6b3d !important; }</style>
+    <section id="s01-s6b">
+      <h2><span class="section-num">6.8</span> 商戶註冊頁 — 發票專區</h2>
+      <hr class="section-divider">
+      <p>商戶首次啟用 12CM 服務（不論免費版或付費版）時，須完成註冊頁填寫。發票相關欄位集中於註冊頁的「發票專區」，填寫後資料將自動帶入發票管理頁，無需重複填寫。</p>
+
+      <div class="callout callout-note">
+        <strong>內部邏輯</strong>：發票專區為註冊頁的獨立分區，不是獨立頁面。資料填寫後與發票管理頁（§6）共用同一份資料。
+      </div>
+
+      <h3>6.8.1 抬頭類型選擇</h3>
+      <p>商戶可能以個人或公司名義付款，因此抬頭類型需在註冊時明確選擇，並依選擇顯示對應欄位。</p>
+
+      <h3>6.8.2 完整欄位規格</h3>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">欄位</th><th style="color:#fff;padding:10px 14px;font-weight:600;">必填</th><th style="color:#fff;padding:10px 14px;font-weight:600;">驗證規則</th><th style="color:#fff;padding:10px 14px;font-weight:600;">備註</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="4" style="background:#f2f4ef;font-weight:700;color:#2d4a2d;font-size:12.5px;">── 基本資料</td>
+            </tr>
+            <tr>
+              <td>品牌名稱</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>中英文符號皆可，不允許 emoji</td>
+              <td>12CM 內部識別用，與發票抬頭無關</td>
+            </tr>
+            <tr>
+              <td>品牌代號</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>英文字母（大小寫）、數字、符號，不允許 emoji；送出前檢查是否已存在於 VIP 店家後台，重複則回傳「代號已存在，請重新輸入」</td>
+              <td>唯一值，系統識別碼</td>
+            </tr>
+            <tr>
+              <td>公司名稱</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>非空字串</td>
+              <td>商戶營登名稱，與品牌名稱分開</td>
+            </tr>
+            <tr>
+              <td>聯絡人姓名</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>非空字串</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>聯絡人電話</td>
+              <td><span class="badge-n">N</span></td>
+              <td>—</td>
+              <td>選填</td>
+            </tr>
+            <tr>
+              <td>聯絡人 Email</td>
+              <td><span class="badge-y">Y</span></td>
+              <td><code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colspan="4" style="background:#f2f4ef;font-weight:700;color:#2d4a2d;font-size:12.5px;">── 發票專區（抬頭類型）</td>
+            </tr>
+            <tr>
+              <td>抬頭類型</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>單選：個人 / 公司</td>
+              <td>決定下方顯示哪組欄位</td>
+            </tr>
+            <tr>
+              <td colspan="4" style="background:#fff9e6;font-size:12px;color:#7a5700;padding:8px 14px;">個人抬頭時顯示</td>
+            </tr>
+            <tr>
+              <td>載具類型</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>單選：Email 寄送（會員載具）/ 手機條碼</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>手機條碼</td>
+              <td><span class="badge-cond">條件必填</span></td>
+              <td><code>/^\/[A-Z0-9]{7}$/</code></td>
+              <td>選擇「手機條碼」時必填，格式：/XXXXXXX</td>
+            </tr>
+            <tr>
+              <td>發票寄送 Email</td>
+              <td><span class="badge-y">Y</span></td>
+              <td><code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code></td>
+              <td>可預設帶入聯絡人 Email，允許修改</td>
+            </tr>
+            <tr>
+              <td colspan="4" style="background:#e8f0fe;font-size:12px;color:#1a3a6b;padding:8px 14px;">公司抬頭時顯示（停用載具設定）</td>
+            </tr>
+            <tr>
+              <td>買受人名稱</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>非空字串</td>
+              <td>公司全名，對應財政部發票「買受人」欄位；可預設帶入公司名稱，允許修改</td>
+            </tr>
+            <tr>
+              <td>統一編號</td>
+              <td><span class="badge-y">Y</span></td>
+              <td><code>/^\d{8}$/</code></td>
+              <td>8 位純數字</td>
+            </tr>
+            <tr>
+              <td>買受人地址</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>非空字串</td>
+              <td>公司登記地址，財政部三聯式發票必填欄位</td>
+            </tr>
+            <tr>
+              <td>買受人電話</td>
+              <td><span class="badge-y">Y</span></td>
+              <td>非空字串</td>
+              <td>公司聯絡電話，財政部三聯式發票必填欄位</td>
+            </tr>
+            <tr>
+              <td>發票寄送 Email</td>
+              <td><span class="badge-y">Y</span></td>
+              <td><code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code></td>
+              <td>可預設帶入聯絡人 Email，允許修改</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="s01-s6b-proto">6.8.3 互動 Prototype</h3>
+      <!-- ============================================================
+     Section 6.8 商戶註冊頁 — 發票資料 互動 Prototype
+     ID 前綴：reg-
+     JS 函式前綴：reg
+     ============================================================ -->
+
+
+
+<div class="reg-proto-wrap">
+  <div class="reg-card">
+
+    <!-- Header -->
+    <div class="reg-header">
+      <div class="reg-logo-row">
+        <div class="reg-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 12l3 3 5-5"/>
+          </svg>
+        </div>
+        <span class="reg-brand-title">Echoss VIP</span>
+      </div>
+      <div class="reg-subtitle">Echoss VIP x LINE OA Plus</div>
+    </div>
+
+    <!-- Tab -->
+    <div class="reg-tab-bar">
+      <span class="reg-tab-label">品牌註冊</span>
+    </div>
+
+    <!-- Form -->
+    <div class="reg-form-body">
+
+      <!-- 基本資料 -->
+      <div class="reg-section-title">基本資料</div>
+
+      <div class="reg-field">
+        <label>品牌名稱 <span class="req">*</span></label>
+        <input id="reg-brand-name" class="reg-input" type="text" placeholder="品牌名稱">
+        <div class="reg-err-msg" id="reg-brand-name-err">請輸入品牌名稱</div>
+      </div>
+
+      <div class="reg-field">
+        <label>品牌代號 <span class="req">*</span></label>
+        <input id="reg-brand-code" class="reg-input" type="text" placeholder="品牌代號（英數符號）" onblur="regCheckDuplicate()">
+        <div class="reg-dup-badge" id="reg-brand-code-dup">代號已存在，請重新輸入</div>
+        <div class="reg-err-msg" id="reg-brand-code-err">請輸入品牌代號</div>
+      </div>
+
+      <div class="reg-field">
+        <label>公司名稱 <span class="req">*</span></label>
+        <input id="reg-company-name" class="reg-input" type="text" placeholder="公司名稱" oninput="regSyncCompanyName()">
+        <div class="reg-err-msg" id="reg-company-name-err">請輸入公司名稱</div>
+      </div>
+
+      <div class="reg-divider"></div>
+      <div class="reg-section-title">聯絡資料</div>
+
+      <div class="reg-field">
+        <label>聯絡人姓名 <span class="req">*</span></label>
+        <input id="reg-contact-name" class="reg-input" type="text" placeholder="聯絡人">
+        <div class="reg-err-msg" id="reg-contact-name-err">請輸入聯絡人姓名</div>
+      </div>
+
+      <div class="reg-field">
+        <label>聯絡電話</label>
+        <input id="reg-contact-phone" class="reg-input" type="tel" placeholder="聯絡電話（選填）">
+      </div>
+
+      <div class="reg-field">
+        <label>聯絡人 Email <span class="req">*</span></label>
+        <input id="reg-contact-email" class="reg-input" type="email" placeholder="聯絡信箱" oninput="regSyncEmail()">
+        <div class="reg-err-msg" id="reg-contact-email-err">請輸入有效的電子信箱</div>
+      </div>
+
+      <!-- 發票資料 — 分隔線區隔，無底色 -->
+      <div class="reg-divider"></div>
+      <div class="reg-invoice-section">
+        <div class="reg-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="8" y1="13" x2="16" y2="13"/>
+            <line x1="8" y1="17" x2="12" y2="17"/>
+          </svg>
+          發票資料
+        </div>
+
+        <!-- 抬頭類型 -->
+        <div class="reg-field">
+          <label>抬頭類型 <span class="req">*</span></label>
+          <div class="reg-radio-group">
+            <label class="reg-radio-btn active" id="reg-type-personal-btn" onclick="regSwitchType('personal')">
+              <input type="radio" name="reg-inv-type" value="personal" checked> 個人
+            </label>
+            <label class="reg-radio-btn" id="reg-type-company-btn" onclick="regSwitchType('company')">
+              <input type="radio" name="reg-inv-type" value="company"> 公司
+            </label>
+          </div>
+        </div>
+
+        <!-- 個人區塊 -->
+        <div id="reg-personal-block">
+          <div class="reg-field">
+            <label>載具類型 <span class="req">*</span></label>
+            <div class="reg-carrier-group">
+              <label class="reg-carrier-btn active" id="reg-carrier-email-btn" onclick="regSwitchCarrier('email')">
+                <input type="radio" name="reg-carrier" value="email" checked> Email 寄送
+              </label>
+              <label class="reg-carrier-btn" id="reg-carrier-barcode-btn" onclick="regSwitchCarrier('barcode')">
+                <input type="radio" name="reg-carrier" value="barcode"> 手機條碼
+              </label>
+            </div>
+          </div>
+
+          <div class="reg-field reg-hidden" id="reg-barcode-field">
+            <label>手機條碼 <span class="req">*</span></label>
+            <input id="reg-barcode" class="reg-input" type="text" placeholder="/XXXXXXX">
+            <div class="reg-hint">格式：/ 開頭 + 7 碼英數大寫，例如 /ABC1234</div>
+            <div class="reg-err-msg" id="reg-barcode-err">格式應為 /XXXXXXX</div>
+          </div>
+        </div>
+
+        <!-- 公司區塊 -->
+        <div id="reg-company-block" class="reg-hidden">
+          <div class="reg-field">
+            <label>買受人名稱 <span class="req">*</span></label>
+            <input id="reg-buyer-name" class="reg-input" type="text" placeholder="買受人名稱（公司全名）">
+            <div class="reg-err-msg" id="reg-buyer-name-err">請輸入買受人名稱</div>
+          </div>
+          <div class="reg-field">
+            <label>統一編號 <span class="req">*</span></label>
+            <input id="reg-tax-id" class="reg-input" type="text" placeholder="8 位數字" maxlength="8">
+            <div class="reg-err-msg" id="reg-tax-id-err">請輸入正確的 8 位統一編號</div>
+          </div>
+          <div class="reg-field">
+            <label>買受人地址 <span class="req">*</span></label>
+            <input id="reg-buyer-addr" class="reg-input" type="text" placeholder="公司登記地址">
+            <div class="reg-err-msg" id="reg-buyer-addr-err">請輸入買受人地址</div>
+          </div>
+          <div class="reg-field">
+            <label>買受人電話 <span class="req">*</span></label>
+            <input id="reg-buyer-phone" class="reg-input" type="tel" placeholder="公司電話">
+            <div class="reg-err-msg" id="reg-buyer-phone-err">請輸入買受人電話</div>
+          </div>
+        </div>
+
+        <!-- 發票寄送 Email（共用） -->
+        <div class="reg-field">
+          <label>發票寄送 Email <span class="req">*</span></label>
+          <input id="reg-inv-email" class="reg-input" type="email" placeholder="發票寄送信箱">
+          <div class="reg-hint">預設帶入聯絡人 Email，可自行修改</div>
+          <div class="reg-err-msg" id="reg-inv-email-err">請輸入有效的電子信箱</div>
+        </div>
+      </div>
+
+      <button class="reg-submit-btn" onclick="regSubmit()">註 冊</button>
+
+    </div>
+  </div>
+</div>
+
+<div class="reg-toast" id="reg-toast">✓ 註冊成功，資料已儲存</div>
+
+      <h3>6.8.4 UI 互動邏輯</h3>
+      <ul class="spec-list">
+        <li>抬頭類型切換為「個人」：顯示載具類型、手機條碼（條件顯示）、發票寄送 Email；隱藏公司發票欄位</li>
+        <li>抬頭類型切換為「公司」：顯示買受人名稱、統一編號、買受人地址、買受人電話、發票寄送 Email；隱藏載具設定；買受人名稱預設帶入公司名稱</li>
+        <li>發票寄送 Email 預設帶入聯絡人 Email，使用者可自行修改</li>
+        <li>載具選擇「手機條碼」：展開手機條碼輸入欄位</li>
+        <li>品牌代號失焦時即時呼叫 API 檢查是否重複，重複時顯示錯誤訊息「代號已存在，請重新輸入」</li>
+        <li>送出時進行全欄位驗證，未通過則於對應欄位下方即時顯示錯誤訊息</li>
+      </ul>
+
+      <h3>6.8.4 與發票管理頁的資料關係</h3>
+      <div class="callout callout-success">
+        <span class="callout-icon">✅</span>
+        <div class="callout-body">
+          註冊頁填寫的發票專區資料，將自動帶入發票管理頁（§6）的發票資訊設定 tab，商戶無需重複填寫。後續如需變更（如更換載具、修改統編），可至發票管理頁或透過 LINE 訂閱管理頁的連結進行更新。
+        </div>
+      </div>
+    </section>
+
+    <!-- S9 -->
+    <section id="s01-s9">
+      <h2><span class="section-num">9</span> Webhook 回應規範 <span class="tag tag-line">LINE 規格</span></h2>
+      <hr class="section-divider">
+      <div class="table-wrap">
+        <table>
+          <thead><tr style="background:#3d6b3d;"><th style="color:#fff;padding:10px 14px;font-weight:600;">回應狀態</th><th style="color:#fff;padding:10px 14px;font-weight:600;">平台行為</th></tr></thead>
+          <tbody>
+            <tr><td><code>2xx</code></td><td>成功，不重試</td></tr>
+            <tr><td><code>4xx</code></td><td>永久失敗，不重試</td></tr>
+            <tr><td><code>5xx</code> / <code>429</code></td><td>暫時失敗，最多重試 3 次（指數退避：1s → 2s → 4s）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- S10 -->
+    <section id="s01-s10">
+      <h2><span class="section-num">10</span> 注意事項</h2>
+      <hr class="section-divider">
+      <ul class="spec-list">
+        <li>Webhook 僅作為事件通知，不包含完整付款明細，<strong>必須</strong>另行呼叫 Retrieve Payment API <span class="tag tag-line">LINE 規格</span></li>
+        <li>同一筆 <code>paymentOrderId</code> 只能對應一張發票，處理前需檢查是否已存在 <code>ISSUED</code> 或 <code>PENDING</code> 紀錄，避免重複建立 <span class="tag tag-internal">內部邏輯</span></li>
+        <li>補開發票時需依序處理所有 <code>PENDING</code> 紀錄，若其中一筆失敗（<code>FAILED</code>），不影響其他筆繼續處理 <span class="tag tag-internal">內部邏輯</span></li>
+        <li>發票開立失敗須記錄失敗原因，並提供人工介入或重試機制 <span class="tag tag-internal">內部邏輯</span></li>
+        <li>手機條碼格式在前端即時驗證；若日後需串接財政部 API 做二次驗證，可在後端補充</li>
+        <li>開票失敗與 Email 寄送失敗均不在使用者介面顯示，統一寫入告警報告供工程師排查</li>
+      </ul>
+
+      <div style="margin-top:32px;padding-top:20px;border-top:1px solid #d4e0d4;font-size:12px;color:#7a8a7a;">
+        本規格以 LINE OA Plus TW DX Solution 技術文件 v2.0.0 及 DX Solution Phase 2 Product Guide 為準。
+      </div>
+    </section>
+
+  </div>
+  </div>
+<script>
+const MD_01 = "# \u958b\u767c\u898f\u683c\u6587\u4ef6 #01\uff1a\u767c\u7968\u7ba1\u7406\n\n**\u7248\u672c**\uff1a1.2 | **\u65e5\u671f**\uff1a2026-05-21 | **\u4f9d\u64da\u6587\u4ef6**\uff1aDX Solution Phase 2 Product Guide \u00a7 14.2\n\n---\n\n## 1. \u529f\u80fd\u6982\u8ff0\n\n\u767c\u7968\u7531 12CM\uff08\u670d\u52d9\u63d0\u4f9b\u5546\uff09\u8ca0\u8cac\u958b\u7acb\uff0cOA Plus \u5e73\u53f0\u4e0d\u7dad\u8b77\u767c\u7968\u8cc7\u6599\u3002\u4f7f\u7528\u8005\u5728 12CM \u7cfb\u7d71\u5167\u586b\u5beb\u767c\u7968\u8cc7\u8a0a\uff0c12CM \u7cfb\u7d71\u9808\u7368\u7acb\u627f\u63a5\u767c\u7968\u8cc7\u6599\u7ba1\u7406\u8207\u958b\u7968\u6d41\u7a0b\u3002\n\n\u652f\u63f4\u5169\u7a2e\u767c\u7968\u985e\u578b\uff1a**\u96fb\u5b50\u767c\u7968**\uff08\u500b\u4eba\uff09\u8207**\u4e09\u806f\u5f0f\u7d71\u4e00\u767c\u7968**\uff08\u516c\u53f8\u884c\u865f\uff09\u3002\u4e0d\u652f\u63f4\u6350\u8d08\u767c\u7968\uff0c\u8f09\u5177\u4e0d\u652f\u63f4\u6350\u8d08\u9078\u9805\u3002\n\n**\u6574\u5408\u65b9\u5f0f\uff1a\u5c0e\u6d41\u81f3 12CM \u5916\u90e8\u9801\u9762**\n\nLINE \u63a1\u7528\u300c\u9023\u7d50\u8df3\u8f49\u300d\u65b9\u5f0f\uff0c\u800c\u975e\u5728 LINE \u9801\u9762\u5167\u5d4c\u586b\u5beb\u3002\u4ed8\u6b3e\u6210\u529f\u5f8c LINE \u986f\u793a\u9023\u7d50\u6309\u9215\uff0c\u4f7f\u7528\u8005\u9ede\u64ca\u5f8c\u53e6\u958b\u65b0\u8996\u7a97\u8df3\u8f49\u81f3 12CM \u958b\u767c\u7684\u767c\u7968\u586b\u5beb\u9801\u3002\u8a02\u95b1\u7ba1\u7406\u9801\u9762\u4ea6\u63d0\u4f9b\u9023\u7d50\uff0c\u4f9b\u4f7f\u7528\u8005\u65e5\u5f8c\u66f4\u65b0\u767c\u7968\u8cc7\u8a0a\uff08\u5982\u66f4\u63db\u8f09\u5177\uff09\u3002\n\n---\n\n## 2. \u8cac\u4efb\u7bc4\u570d\n\n| \u7bc4\u7587 | \u8ca0\u8cac\u65b9 | \u8aaa\u660e |\n|------|--------|------|\n| \u767c\u7968\u958b\u7acb | 12CM | \u7531 12CM \u7cfb\u7d71\u7522\u751f\u8207\u767c\u9001\u767c\u7968 |\n| \u767c\u7968\u8cc7\u8a0a\u6536\u96c6 | 12CM | \u4f7f\u7528\u8005\u5728 12CM \u7cfb\u7d71\u586b\u5beb\u62ac\u982d\u3001\u7d71\u7de8\u7b49\u8cc7\u8a0a |\n| \u4ed8\u6b3e\u6210\u529f\u4e8b\u4ef6\u89f8\u767c | OA Plus \u5e73\u53f0 | \u900f\u904e `PAYMENT_SUCCEEDED` Webhook \u901a\u77e5 12CM |\n| \u4ed8\u6b3e\u5feb\u7167\u67e5\u8a62 | 12CM | \u6536\u5230 Webhook \u5f8c\u547c\u53eb Open API \u53d6\u5f97\u4ed8\u6b3e\u660e\u7d30 |\n| \u5f85\u958b\u7968\u7d00\u9304\u7ba1\u7406 | 12CM | \u767c\u7968\u8cc7\u6599\u672a\u9f4a\u5168\u6642\uff0c\u5efa\u7acb\u5f85\u958b\u7968\u7d00\u9304\uff0c\u8cc7\u6599\u88dc\u9f4a\u5f8c\u88dc\u958b |\n\n---\n\n## 3. \u767c\u7968\u985e\u578b\u5b9a\u7fa9\n\n### 3.1 \u96fb\u5b50\u767c\u7968\uff08\u500b\u4eba\uff09\n\n\u4f7f\u7528\u8005\u9078\u64c7\u500b\u4eba\u62ac\u982d\u6642\u9069\u7528\u3002\n\n| \u6b04\u4f4d | \u5fc5\u586b | \u683c\u5f0f / \u8aaa\u660e |\n|------|------|------------|\n| \u62ac\u982d\u985e\u578b | Y | \u56fa\u5b9a\u70ba\u300c\u500b\u4eba\u300d |\n| \u96fb\u5b50\u4fe1\u7bb1 | Y | \u767c\u7968\u5bc4\u9001\u7528\uff0c\u9700\u901a\u904e email \u683c\u5f0f\u9a57\u8b49 |\n| \u8f09\u5177\u985e\u578b | Y | \u4e8c\u9078\u4e00\uff1aEmail \u5bc4\u9001\uff08\u6703\u54e1\u8f09\u5177\uff09\u3001\u624b\u6a5f\u689d\u78bc |\n| \u624b\u6a5f\u689d\u78bc | \u689d\u4ef6\u5fc5\u586b | \u9078\u64c7\u300c\u624b\u6a5f\u689d\u78bc\u300d\u6642\u5fc5\u586b\uff0c\u683c\u5f0f\uff1a`/XXXXXXX`\uff08\u659c\u7dda + 7 \u78bc\u82f1\u6578\u5927\u5beb\uff09 |\n| \u806f\u7d61\u96fb\u8a71 | N | \u9078\u586b |\n\n### 3.2 \u4e09\u806f\u5f0f\u7d71\u4e00\u767c\u7968\uff08\u516c\u53f8\uff09\n\n\u4f7f\u7528\u8005\u9078\u64c7\u516c\u53f8\u62ac\u982d\u6642\u9069\u7528\uff0c\u540c\u6642\u505c\u7528\u8f09\u5177\u8a2d\u5b9a\u3002\n\n| \u6b04\u4f4d | \u5fc5\u586b | \u683c\u5f0f / \u8aaa\u660e |\n|------|------|------------|\n| \u62ac\u982d\u985e\u578b | Y | \u56fa\u5b9a\u70ba\u300c\u516c\u53f8\u300d |\n| \u516c\u53f8\u62ac\u982d | Y | \u516c\u53f8\u5168\u540d\uff0c\u4e0d\u53ef\u70ba\u7a7a |\n| \u7d71\u4e00\u7de8\u865f | Y | 8 \u4f4d\u7d14\u6578\u5b57\uff0c\u9700\u901a\u904e\u683c\u5f0f\u9a57\u8b49 |\n| \u96fb\u5b50\u4fe1\u7bb1 | Y | \u767c\u7968\u5bc4\u9001\u7528 |\n| \u806f\u7d61\u96fb\u8a71 | N | \u9078\u586b |\n\n---\n\n## 4. \u958b\u7968\u6d41\u7a0b\n\n### 4.1 \u6b63\u5e38\u6d41\u7a0b\uff08\u4ed8\u6b3e\u524d\u5df2\u586b\u59a5\u767c\u7968\u8cc7\u8a0a\uff09\n\n```\n\u4f7f\u7528\u8005\u5b8c\u6210\u4ed8\u6b3e\n    \u2502\n    \u25bc\nOA Plus \u767c\u9001 PAYMENT_SUCCEEDED Webhook\n    \u2502\n    \u25bc\n12CM \u63a5\u6536 Webhook\uff08\u9a57\u8b49 X-DX-Signature\uff09\n    \u2502\n    \u25bc\n12CM \u547c\u53eb Retrieve Payment API \u53d6\u5f97\u4ed8\u6b3e\u5feb\u7167\n    \u2502\n    \u25bc\n12CM \u67e5\u8a62\u8a72 merchantId \u662f\u5426\u5df2\u6709\u5b8c\u6574\u767c\u7968\u8cc7\u6599\n    \u2502\n  \u8cc7\u6599\u9f4a\u5168\n    \u2502\n    \u25bc\n\u89f8\u767c\u958b\u7968\uff0c\u767c\u7968\u5bc4\u9001\u81f3\u4f7f\u7528\u8005 Email\n```\n\n### 4.2 \u5ef6\u9072\u958b\u7968\u6d41\u7a0b\uff08\u4ed8\u6b3e\u5f8c\u624d\u88dc\u586b\u767c\u7968\u8cc7\u8a0a\uff09\n\n```\n\u4f7f\u7528\u8005\u5b8c\u6210\u4ed8\u6b3e\uff0c\u4f46\u5c1a\u672a\u586b\u5beb\u767c\u7968\u8cc7\u8a0a\n    \u2502\n    \u25bc\nOA Plus \u767c\u9001 PAYMENT_SUCCEEDED Webhook\n    \u2502\n    \u25bc\n12CM \u63a5\u6536 Webhook\uff0c\u67e5\u8a62\u8a72 merchantId \u767c\u7968\u8cc7\u6599\n    \u2502\n  \u8cc7\u6599\u4e0d\u9f4a\u5168\uff08\u6b04\u4f4d\u7f3a\u6f0f\u6216\u5f9e\u672a\u586b\u5beb\uff09\n    \u2502\n    \u25bc\n12CM \u5efa\u7acb\u5f85\u958b\u7968\u7d00\u9304\uff08status: PENDING\uff09\n    \u251c\u2500\u2500 \u5132\u5b58 paymentOrderId\u3001merchantId\u3001\u4ed8\u6b3e\u91d1\u984d\u3001\u4ed8\u6b3e\u6642\u9593\n    \u2514\u2500\u2500 \u72c0\u614b\u6a19\u8a18\u70ba PENDING\n    \u2502\n    \u25bc\nAdmin Plugin \u986f\u793a\u88dc\u586b\u63d0\u793a banner\uff0c\u5f15\u5c0e\u4f7f\u7528\u8005\u81f3\u767c\u7968\u586b\u5beb\u9801\n    \u2502\n    \u25bc\n\u4f7f\u7528\u8005\u5b8c\u6210\u767c\u7968\u8cc7\u8a0a\u586b\u5beb\u4e26\u9001\u51fa\n    \u2502\n    \u25bc\n12CM \u89f8\u767c\u88dc\u958b\u6d41\u7a0b\n    \u251c\u2500\u2500 \u67e5\u8a62\u8a72 merchantId \u6240\u6709 status = PENDING \u7684\u5f85\u958b\u7968\u7d00\u9304\n    \u2514\u2500\u2500 \u4f9d\u5e8f\u88dc\u958b\u767c\u7968\uff0c\u6210\u529f\u5f8c\u66f4\u65b0 status \u70ba ISSUED\n    \u2502\n    \u25bc\n\u767c\u7968\u5bc4\u9001\u81f3\u4f7f\u7528\u8005 Email\n```\n\n---\n\n## 5. \u5f85\u958b\u7968\u7d00\u9304\uff08`invoice_pending`\uff09\u8cc7\u6599\u7d50\u69cb\n\n> \u4ee5\u4e0b\u70ba\u5efa\u8b70\u8cc7\u6599\u7d50\u69cb\uff0c\u9700\u7531\u5de5\u7a0b\u5e2b\u4f9d\u5be6\u969b\u7cfb\u7d71\u8a2d\u8a08\u8abf\u6574\u3002\n\n| \u6b04\u4f4d | \u985e\u578b | \u8aaa\u660e |\n|------|------|------|\n| `id` | string | \u5f85\u958b\u7968\u7d00\u9304\u552f\u4e00 ID |\n| `merchantId` | string | \u5546\u6236\u8b58\u5225\u78bc |\n| `paymentOrderId` | string | \u5c0d\u61c9\u7684 OA Plus \u4ed8\u6b3e\u8a02\u55ae ID |\n| `amount` | number | \u4ed8\u6b3e\u91d1\u984d\uff08\u4f86\u81ea Retrieve Payment API\uff09 |\n| `paidAt` | timestamp | \u4ed8\u6b3e\u5b8c\u6210\u6642\u9593 |\n| `status` | enum | `PENDING`\uff1a\u5f85\u88dc\u586b / `ISSUED`\uff1a\u5df2\u958b\u7acb / `FAILED`\uff1a\u958b\u7acb\u5931\u6557 |\n| `createdAt` | timestamp | \u672c\u7b46\u7d00\u9304\u5efa\u7acb\u6642\u9593 |\n| `issuedAt` | timestamp | \u767c\u7968\u958b\u7acb\u6642\u9593\uff08ISSUED \u5f8c\u586b\u5165\uff09 |\n\n---\n\n## 6. \u767c\u7968\u8cc7\u8a0a\u586b\u5beb\u9801\u9762\u898f\u683c\n\n### 6.1 \u8868\u55ae\u6b04\u4f4d\u8207\u9a57\u8b49\u898f\u5247\n\n| \u6b04\u4f4d | \u5fc5\u586b | \u9a57\u8b49\u898f\u5247 | \u932f\u8aa4\u63d0\u793a\u6587\u6848 |\n|------|------|---------|------------|\n| \u62ac\u982d\u985e\u578b | Y | \u55ae\u9078\uff08\u500b\u4eba / \u516c\u53f8\uff09 | \u2014 |\n| \u516c\u53f8\u62ac\u982d | \u516c\u53f8\u5fc5\u586b | \u975e\u7a7a\u5b57\u4e32 | \u8acb\u8f38\u5165\u516c\u53f8\u62ac\u982d |\n| \u7d71\u4e00\u7de8\u865f | \u516c\u53f8\u5fc5\u586b | `/^\\d{8}$/` | \u8acb\u8f38\u5165\u6b63\u78ba\u7684 8 \u4f4d\u7d71\u4e00\u7de8\u865f |\n| \u96fb\u5b50\u4fe1\u7bb1 | Y | `/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/` | \u8acb\u8f38\u5165\u6709\u6548\u7684\u96fb\u5b50\u4fe1\u7bb1 |\n| \u8f09\u5177\u985e\u578b | \u500b\u4eba\u5fc5\u586b | \u55ae\u9078\uff08Email / \u624b\u6a5f\u689d\u78bc\uff09 | \u2014 |\n| \u624b\u6a5f\u689d\u78bc | \u689d\u4ef6\u5fc5\u586b | `/^\\/[A-Z0-9]{7}$/` | \u683c\u5f0f\u61c9\u70ba /XXXXXXX |\n| \u806f\u7d61\u96fb\u8a71 | N | \u2014 | \u2014 |\n\n### 6.2 UI \u4e92\u52d5\u908f\u8f2f\n\n- \u62ac\u982d\u985e\u578b\u5207\u63db\u70ba\u300c\u516c\u53f8\u300d\uff1a\u96b1\u85cf\u8f09\u5177\u8a2d\u5b9a\uff0c\u986f\u793a\u516c\u53f8\u62ac\u982d\u8207\u7d71\u4e00\u7de8\u865f\u6b04\u4f4d\n- \u62ac\u982d\u985e\u578b\u5207\u63db\u70ba\u300c\u500b\u4eba\u300d\uff1a\u96b1\u85cf\u516c\u53f8\u8cc7\u8a0a\u5340\u584a\uff0c\u986f\u793a\u8f09\u5177\u8a2d\u5b9a\n- \u8f09\u5177\u9078\u64c7\u300c\u624b\u6a5f\u689d\u78bc\u300d\uff1a\u5c55\u958b\u689d\u78bc\u8f38\u5165\u6b04\u4f4d\n- \u9001\u51fa\u6642\u9032\u884c\u5168\u6b04\u4f4d\u9a57\u8b49\uff0c\u672a\u901a\u904e\u5247\u65bc\u5c0d\u61c9\u6b04\u4f4d\u4e0b\u65b9\u5373\u6642\u986f\u793a\u932f\u8aa4\u8a0a\u606f\n- \u5132\u5b58\u6210\u529f\u5f8c\u986f\u793a success banner\uff0c3 \u79d2\u5f8c\u81ea\u52d5\u6d88\u5931\n\n### 6.3 \u88dc\u586b\u63d0\u793a Banner\n\n\u82e5\u4f7f\u7528\u8005\u6709 `PENDING` \u72c0\u614b\u7684\u5f85\u958b\u7968\u7d00\u9304\uff0cAdmin Plugin \u9801\u9762\u9802\u90e8\u61c9\u986f\u793a\uff1a\n\n> \u60a8\u6709 N \u7b46\u4ed8\u6b3e\u5c1a\u672a\u5b8c\u6210\u767c\u7968\u8cc7\u8a0a\u586b\u5beb\uff0c\u8acb\u524d\u5f80\u586b\u5beb\uff0c\u586b\u5beb\u5b8c\u6210\u5f8c\u7cfb\u7d71\u5c07\u81ea\u52d5\u88dc\u958b\u767c\u7968\u3002\n\n### 6.4 \u9032\u5165\u767c\u7968\u586b\u5beb\u9801\u7684\u8def\u5f91\n\n\u4f7f\u7528\u8005\u9032\u5165 12CM \u767c\u7968\u586b\u5beb\u9801\u9762\u6709\u4e09\u689d\u8def\u5f91\uff0c\u5747\u900f\u904e LINE \u7aef\u7684**\u9023\u7d50\u6309\u9215\u8df3\u8f49**\u81f3 12CM \u5916\u90e8\u9801\u9762\uff08\u53e6\u958b\u65b0\u8996\u7a97\uff09\uff0c\u4e0d\u5728 LINE \u9801\u9762\u5167\u5d4c\u586b\u5beb\uff1a\n\n1. **\u8def\u5f91\u4e00 \u2014 \u4ed8\u6b3e\u6210\u529f\u9801\u9762**\uff1a\u4f7f\u7528\u8005\u5b8c\u6210\u85cd\u65b0\u4ed8\u6b3e\u5f8c\uff0cLINE \u4ed8\u6b3e\u6210\u529f\u9801\u9762\u986f\u793a\u300c\u524d\u5f80\u586b\u5beb\u767c\u7968\u8cc7\u8a0a\u300d\u9023\u7d50\u6309\u9215\uff0c\u9ede\u64ca\u5f8c\u8df3\u8f49\u81f3 12CM \u586b\u5beb\u9801\u3002LINE \u5efa\u8b70\u5c07\u586b\u5beb\u52d5\u4f5c\u7f6e\u65bc\u4ed8\u6b3e\u5b8c\u6210\u5f8c\uff0c\u907f\u514d\u6d41\u7a0b\u65b7\u9ede\u5f71\u97ff\u8f49\u5316\u7387\u3002\n2. **\u8def\u5f91\u4e8c \u2014 Admin Plugin \u88dc\u586b Banner**\uff1a\u4ed8\u6b3e\u5f8c\u82e5\u672a\u586b\u5beb\uff0c\u7cfb\u7d71\u5efa\u7acb PENDING \u7d00\u9304\uff0cAdmin Plugin \u9802\u90e8\u986f\u793a\u88dc\u586b\u63d0\u793a Banner\uff0c\u9ede\u64ca\u9023\u7d50\u8df3\u8f49\u81f3 12CM \u586b\u5beb\u9801\u3002\n3. **\u8def\u5f91\u4e09 \u2014 \u8a02\u95b1\u7ba1\u7406\u9801\u9762**\uff1aOA Plus \u8a02\u95b1\u7ba1\u7406\u9801\u9762\u63d0\u4f9b\u9023\u7d50\uff0c\u4f7f\u7528\u8005\u53ef\u5728\u4e0b\u4e00\u671f\u6263\u6b3e\u524d\u8df3\u8f49\u81f3 12CM \u9801\u9762\u66f4\u65b0\u767c\u7968\u8cc7\u8a0a\uff08\u5982\u66f4\u63db\u8f09\u5177\u3001\u4fee\u6539\u7d71\u7de8\uff09\u3002\n\n### 6.5 \u958b\u7acb\u7d00\u9304\u898f\u683c\n\n\u767c\u7968\u7ba1\u7406\u9801\u9700\u5448\u73fe\u6bcf\u7b46\u5df2\u958b\u7acb\u6216\u8655\u7406\u4e2d\u7684\u767c\u7968\u7d00\u9304\uff1a\n\n| \u6b04\u4f4d | \u8aaa\u660e |\n|------|------|\n| \u4ed8\u6b3e\u65e5\u671f | \u5c0d\u61c9 `paidAt` |\n| \u4ed8\u6b3e\u91d1\u984d | \u5c0d\u61c9 `amount` |\n| \u767c\u7968\u72c0\u614b | `PENDING` / `ISSUED` / `FAILED` |\n| \u767c\u7968\u865f\u78bc | \u958b\u7acb\u6210\u529f\u5f8c\u986f\u793a\uff08ISSUED\uff09 |\n| \u958b\u7acb\u65e5\u671f | \u5c0d\u61c9 `issuedAt`\uff08ISSUED \u5f8c\u986f\u793a\uff09 |\n| \u64cd\u4f5c | FAILED \u72c0\u614b\u63d0\u4f9b\u300c\u91cd\u65b0\u958b\u7acb\u300d\u6309\u9215 |\n\n### 6.6 \u524d\u7aef Prototype \u2014 \u767c\u7968\u586b\u5beb\u9801\n\n\uff08\u8a73\u898b HTML \u6587\u4ef6\u5167\u5d4c\u4e92\u52d5 Prototype\uff09\n\n### 6.7 \u524d\u7aef Prototype \u2014 \u767c\u7968\u7ba1\u7406\u9801\n\n\uff08\u8a73\u898b HTML \u6587\u4ef6\u5167\u5d4c\u4e92\u52d5 Prototype\uff09\n\n---\n\n\n## 6.8 \u5546\u6236\u8a3b\u518a\u9801 \u2014 \u767c\u7968\u5c08\u5340\n\n\u5546\u6236\u9996\u6b21\u555f\u7528 12CM \u670d\u52d9\u6642\uff08\u4e0d\u8ad6\u514d\u8cbb\u7248\u6216\u4ed8\u8cbb\u7248\uff09\uff0c\u9808\u5b8c\u6210\u8a3b\u518a\u9801\u586b\u5beb\u3002\u767c\u7968\u76f8\u95dc\u6b04\u4f4d\u96c6\u4e2d\u65bc\u8a3b\u518a\u9801\u7684\u300c\u767c\u7968\u5c08\u5340\u300d\uff08\u70ba\u8a3b\u518a\u9801\u5167\u7684\u7368\u7acb\u5206\u5340\uff0c\u975e\u7368\u7acb\u9801\u9762\uff09\uff0c\u586b\u5beb\u5f8c\u8cc7\u6599\u5c07\u81ea\u52d5\u5e36\u5165\u767c\u7968\u7ba1\u7406\u9801\uff0c\u7121\u9700\u91cd\u8907\u586b\u5beb\u3002\n\n### 6.8.1 \u5b8c\u6574\u6b04\u4f4d\u898f\u683c\n\n**\u57fa\u672c\u8cc7\u6599**\n\n| \u6b04\u4f4d | \u5fc5\u586b | \u9a57\u8b49\u898f\u5247 | \u5099\u8a3b |\n|------|------|---------|------|\n| \u54c1\u724c\u540d\u7a31 | Y | \u4e2d\u82f1\u6587\u7b26\u865f\u7686\u53ef\uff0c\u4e0d\u5141\u8a31 emoji | 12CM \u5167\u90e8\u8b58\u5225\u7528 |\n| \u54c1\u724c\u4ee3\u865f | Y | \u82f1\u6587\u5b57\u6bcd\uff08\u5927\u5c0f\u5beb\uff09\u3001\u6578\u5b57\u3001\u7b26\u865f\uff0c\u4e0d\u5141\u8a31 emoji\uff1b\u9001\u51fa\u524d\u6aa2\u67e5\u662f\u5426\u91cd\u8907\uff0c\u91cd\u8907\u56de\u50b3\u300c\u4ee3\u865f\u5df2\u5b58\u5728\uff0c\u8acb\u91cd\u65b0\u8f38\u5165\u300d | \u552f\u4e00\u503c |\n| \u516c\u53f8\u540d\u7a31 | Y | \u975e\u7a7a\u5b57\u4e32 | \u5546\u6236\u71df\u767b\u540d\u7a31\uff0c\u8207\u54c1\u724c\u540d\u7a31\u5206\u958b |\n| \u806f\u7d61\u4eba\u59d3\u540d | Y | \u975e\u7a7a\u5b57\u4e32 | |\n| \u806f\u7d61\u4eba\u96fb\u8a71 | N | \u2014 | \u9078\u586b |\n| \u806f\u7d61\u4eba Email | Y | email \u683c\u5f0f | |\n\n**\u767c\u7968\u5c08\u5340 \u2014 \u500b\u4eba\u62ac\u982d\u6642\u986f\u793a**\n\n| \u6b04\u4f4d | \u5fc5\u586b | \u9a57\u8b49\u898f\u5247 | \u5099\u8a3b |\n|------|------|---------|------|\n| \u62ac\u982d\u985e\u578b | Y | \u55ae\u9078\uff1a\u500b\u4eba / \u516c\u53f8 | |\n| \u8f09\u5177\u985e\u578b | Y | \u55ae\u9078\uff1aEmail \u5bc4\u9001 / \u624b\u6a5f\u689d\u78bc | |\n| \u624b\u6a5f\u689d\u78bc | \u689d\u4ef6\u5fc5\u586b | `/^\\/[A-Z0-9]{7}$/` | \u9078\u64c7\u300c\u624b\u6a5f\u689d\u78bc\u300d\u6642\u5fc5\u586b |\n| \u767c\u7968\u5bc4\u9001 Email | Y | email \u683c\u5f0f | \u9810\u8a2d\u5e36\u5165\u806f\u7d61\u4eba Email\uff0c\u5141\u8a31\u4fee\u6539 |\n\n**\u767c\u7968\u5c08\u5340 \u2014 \u516c\u53f8\u62ac\u982d\u6642\u986f\u793a\uff08\u505c\u7528\u8f09\u5177\u8a2d\u5b9a\uff09**\n\n| \u6b04\u4f4d | \u5fc5\u586b | \u9a57\u8b49\u898f\u5247 | \u5099\u8a3b |\n|------|------|---------|------|\n| \u8cb7\u53d7\u4eba\u540d\u7a31 | Y | \u975e\u7a7a\u5b57\u4e32 | \u53ef\u9810\u8a2d\u5e36\u5165\u516c\u53f8\u540d\u7a31\uff0c\u5141\u8a31\u4fee\u6539\uff1b\u5c0d\u61c9\u8ca1\u653f\u90e8\u767c\u7968\u300c\u8cb7\u53d7\u4eba\u300d\u6b04\u4f4d |\n| \u7d71\u4e00\u7de8\u865f | Y | `/^\\d{8}$/` | 8 \u4f4d\u7d14\u6578\u5b57 |\n| \u8cb7\u53d7\u4eba\u5730\u5740 | Y | \u975e\u7a7a\u5b57\u4e32 | \u516c\u53f8\u767b\u8a18\u5730\u5740\uff0c\u8ca1\u653f\u90e8\u4e09\u806f\u5f0f\u767c\u7968\u5fc5\u586b\u6b04\u4f4d |\n| \u8cb7\u53d7\u4eba\u96fb\u8a71 | Y | \u975e\u7a7a\u5b57\u4e32 | \u8ca1\u653f\u90e8\u4e09\u806f\u5f0f\u767c\u7968\u5fc5\u586b\u6b04\u4f4d |\n| \u767c\u7968\u5bc4\u9001 Email | Y | email \u683c\u5f0f | \u9810\u8a2d\u5e36\u5165\u806f\u7d61\u4eba Email\uff0c\u5141\u8a31\u4fee\u6539 |\n\n### 6.8.2 UI \u4e92\u52d5\u908f\u8f2f\n\n- \u62ac\u982d\u985e\u578b\u5207\u63db\u70ba\u300c\u500b\u4eba\u300d\uff1a\u986f\u793a\u8f09\u5177\u985e\u578b\u3001\u624b\u6a5f\u689d\u78bc\uff08\u689d\u4ef6\u986f\u793a\uff09\u3001\u767c\u7968\u5bc4\u9001 Email\uff1b\u96b1\u85cf\u516c\u53f8\u767c\u7968\u6b04\u4f4d\n- \u62ac\u982d\u985e\u578b\u5207\u63db\u70ba\u300c\u516c\u53f8\u300d\uff1a\u986f\u793a\u8cb7\u53d7\u4eba\u540d\u7a31\uff08\u9810\u8a2d\u5e36\u5165\u516c\u53f8\u540d\u7a31\uff09\u3001\u7d71\u4e00\u7de8\u865f\u3001\u8cb7\u53d7\u4eba\u5730\u5740\u3001\u8cb7\u53d7\u4eba\u96fb\u8a71\u3001\u767c\u7968\u5bc4\u9001 Email\uff1b\u96b1\u85cf\u8f09\u5177\u8a2d\u5b9a\n- \u767c\u7968\u5bc4\u9001 Email \u9810\u8a2d\u5e36\u5165\u806f\u7d61\u4eba Email\uff0c\u4f7f\u7528\u8005\u53ef\u81ea\u884c\u4fee\u6539\n- \u54c1\u724c\u4ee3\u865f\u5931\u7126\u6642\u5373\u6642\u547c\u53eb API \u6aa2\u67e5\u662f\u5426\u91cd\u8907\n- \u9001\u51fa\u6642\u9032\u884c\u5168\u6b04\u4f4d\u9a57\u8b49\n\n### 6.8.3 \u8207\u767c\u7968\u7ba1\u7406\u9801\u7684\u8cc7\u6599\u95dc\u4fc2\n\n\u8a3b\u518a\u9801\u586b\u5beb\u7684\u767c\u7968\u5c08\u5340\u8cc7\u6599\uff0c\u5c07\u81ea\u52d5\u5e36\u5165\u767c\u7968\u7ba1\u7406\u9801\uff08\u00a76\uff09\u7684\u767c\u7968\u8cc7\u8a0a\u8a2d\u5b9a tab\uff0c\u5546\u6236\u7121\u9700\u91cd\u8907\u586b\u5beb\u3002\u5f8c\u7e8c\u5982\u9700\u8b8a\u66f4\uff0c\u53ef\u81f3\u767c\u7968\u7ba1\u7406\u9801\u6216\u900f\u904e LINE \u8a02\u95b1\u7ba1\u7406\u9801\u7684\u9023\u7d50\u9032\u884c\u66f4\u65b0\u3002\n\n## 7. Webhook \u63a5\u6536\u898f\u683c\n\n### 7.1 \u4e8b\u4ef6\u985e\u578b\n\n\u4f7f\u7528 `PAYMENT_SUCCEEDED` \u4e8b\u4ef6\u4f5c\u70ba\u958b\u7968\u6d41\u7a0b\u89f8\u767c\u9ede\u3002\n\n### 7.2 Payload \u6b04\u4f4d\n\n```json\n{\n  \"eventType\": \"PAYMENT_SUCCEEDED\",\n  \"eventId\": \"evt-002\",\n  \"pluginId\": \"testplugin\",\n  \"merchantId\": \"@merchant123\",\n  \"paymentOrderId\": \"pay-001\",\n  \"paymentStatus\": \"SUCCESS\",\n  \"sentAt\": \"2026-03-30T16:40:00Z\"\n}\n```\n\n| \u6b04\u4f4d | \u985e\u578b | \u5fc5\u586b | \u8aaa\u660e |\n|------|------|------|------|\n| `eventType` | string | Y | \u56fa\u5b9a\u70ba `PAYMENT_SUCCEEDED` |\n| `eventId` | string | Y | \u6b64\u4e8b\u4ef6\u552f\u4e00\u8b58\u5225\u78bc |\n| `pluginId` | string | Y | Plugin \u8b58\u5225\u78bc |\n| `merchantId` | string | Y | \u5546\u6236\u8b58\u5225\u78bc |\n| `paymentOrderId` | string | Y | \u4ed8\u6b3e\u8a02\u55ae ID\uff0c\u7528\u65bc\u67e5\u8a62\u660e\u7d30 |\n| `paymentStatus` | string | Y | \u4f8b\u5982 `SUCCESS` |\n| `sentAt` | Timestamp | Y | ISO 8601 UTC |\n\n### 7.3 Signature \u9a57\u8b49\n\n```\nX-DX-Signature: sha256={HMAC-SHA256 of raw request body}\n```\n\n12CM \u5fc5\u9808\u7528 **Secret of Admin Plugin** \u9a57\u8b49\u7c3d\u7ae0\uff1a\n\n```java\nString expectedSig = \"sha256=\" + hmacSha256(rawBody, secret);\nif (!MessageDigest.isEqual(expectedSig.getBytes(), receivedSig.getBytes())) {\n    throw new UnauthorizedException(\"Invalid signature\");\n}\n```\n\n---\n\n## 8. Open API \u67e5\u8a62\u4ed8\u6b3e\u660e\u7d30\n\n\u6536\u5230 Webhook \u5f8c\uff0c12CM \u9700\u547c\u53eb **Retrieve Payment API** \u53d6\u5f97\u5b8c\u6574\u4ed8\u6b3e\u5feb\u7167\u3002\n\n| \u9805\u76ee | \u503c |\n|------|-----|\n| Swagger | `https://vos.line-scdn.net/oa-plus-dx-swagger-ui-web/index.html?urls.primaryName=Staging#/Plugin%20Payment/getPluginPaymentDetails` |\n| \u74b0\u5883 | Staging only\uff08\u76ee\u524d\uff09 |\n| \u7528\u9014 | \u53d6\u5f97\u4ed8\u6b3e\u5feb\u7167\u8cc7\u6599\uff0c\u4f5c\u70ba\u5f8c\u7e8c\u958b\u7968\u8207\u5e33\u52d9\u8655\u7406\u4f9d\u64da |\n\n---\n\n## 9. Webhook \u56de\u61c9\u898f\u7bc4\n\n| \u56de\u61c9\u72c0\u614b | \u5e73\u53f0\u884c\u70ba |\n|---------|---------|\n| 2xx | \u6210\u529f\uff0c\u4e0d\u91cd\u8a66 |\n| 4xx | \u6c38\u4e45\u5931\u6557\uff0c\u4e0d\u91cd\u8a66 |\n| 5xx / 429 | \u66ab\u6642\u5931\u6557\uff0c\u6700\u591a\u91cd\u8a66 3 \u6b21\uff08\u6307\u6578\u9000\u907f\uff1a1s \u2192 2s \u2192 4s\uff09 |\n\n---\n\n## 10. \u6ce8\u610f\u4e8b\u9805\n\n- Webhook \u50c5\u4f5c\u70ba\u4e8b\u4ef6\u901a\u77e5\uff0c\u4e0d\u5305\u542b\u5b8c\u6574\u4ed8\u6b3e\u660e\u7d30\uff0c**\u5fc5\u9808**\u53e6\u884c\u547c\u53eb Retrieve Payment API\n- \u540c\u4e00\u7b46 `paymentOrderId` \u53ea\u80fd\u5c0d\u61c9\u4e00\u5f35\u767c\u7968\uff0c\u8655\u7406\u524d\u9700\u6aa2\u67e5\u662f\u5426\u5df2\u5b58\u5728 `ISSUED` \u6216 `PENDING` \u7d00\u9304\uff0c\u907f\u514d\u91cd\u8907\u5efa\u7acb\n- \u88dc\u958b\u767c\u7968\u6642\u9700\u4f9d\u5e8f\u8655\u7406\u6240\u6709 `PENDING` \u7d00\u9304\uff0c\u82e5\u5176\u4e2d\u4e00\u7b46\u5931\u6557\uff08`FAILED`\uff09\uff0c\u4e0d\u5f71\u97ff\u5176\u4ed6\u7b46\u7e7c\u7e8c\u8655\u7406\n- \u767c\u7968\u958b\u7acb\u5931\u6557\u9808\u8a18\u9304\u5931\u6557\u539f\u56e0\uff0c\u4e26\u63d0\u4f9b\u4eba\u5de5\u4ecb\u5165\u6216\u91cd\u8a66\u6a5f\u5236\n- \u624b\u6a5f\u689d\u78bc\u683c\u5f0f\u5728\u524d\u7aef\u5373\u6642\u9a57\u8b49\uff1b\u82e5\u65e5\u5f8c\u9700\u4e32\u63a5\u8ca1\u653f\u90e8 API \u505a\u4e8c\u6b21\u9a57\u8b49\uff0c\u53ef\u5728\u5f8c\u7aef\u88dc\u5145\n- \u524d\u7aef Prototype\uff08\u586b\u5beb\u9801\u3001\u7ba1\u7406\u9801\uff09\u8a73\u898b HTML \u898f\u683c\u6587\u4ef6\u5167\u5d4c\u4e92\u52d5\u5143\u4ef6\n\n---\n\n*\u672c\u898f\u683c\u4ee5 LINE OA Plus TW DX Solution \u6280\u8853\u6587\u4ef6 v2.0.0 \u53ca DX Solution Phase 2 Product Guide \u70ba\u6e96\u3002*\n";
+const MD_FILES = {"01": "spec-01-invoice-management.md", "02": "spec-02-payment-gateway.md", "03": "spec-03-premium-activation.md", "04": "spec-04-frontend-sdk-roles.md"};
+const MD_DATA = { '01': MD_01, '02': MD_02, '03': MD_03, '04': MD_04 };
+
+function downloadMD(num) {
+  const content = MD_DATA[num];
+  const filename = MD_FILES[num];
+  if (!content) return;
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+</script>
+<script>
+            function protoSelect(type) {
+              const pEl = document.getElementById('p-type-personal');
+              const cEl = document.getElementById('p-type-company');
+              const cSec = document.getElementById('p-company-section');
+              const carrSec = document.getElementById('p-carrier-section');
+              const carrDis = document.getElementById('p-carrier-disabled');
+              if (type === 'personal') {
+                pEl.style.border = '2px solid #3d6b3d'; pEl.style.background = '#e8f0e8';
+                pEl.querySelector('div div:first-child').style.color = '#2d4a2d';
+                cEl.style.border = '1px solid #d4e0d4'; cEl.style.background = '#fff';
+                cEl.querySelector('div div:first-child').style.color = '#1a1a1a';
+                cSec.style.display = 'none'; carrSec.style.display = 'block'; carrDis.style.display = 'none';
+              } else {
+                cEl.style.border = '2px solid #3d6b3d'; cEl.style.background = '#e8f0e8';
+                cEl.querySelector('div div:first-child').style.color = '#2d4a2d';
+                pEl.style.border = '1px solid #d4e0d4'; pEl.style.background = '#fff';
+                pEl.querySelector('div div:first-child').style.color = '#1a1a1a';
+                cSec.style.display = 'block'; carrSec.style.display = 'none'; carrDis.style.display = 'block';
+              }
+            }
+            function protoCarrier(type) {
+              const eEl = document.getElementById('p-carrier-email');
+              const bEl = document.getElementById('p-carrier-barcode');
+              const bWrap = document.getElementById('p-barcode-wrap');
+              if (type === 'email') {
+                eEl.style.border = '2px solid #3d6b3d'; eEl.style.background = '#e8f0e8';
+                bEl.style.border = '1px solid #d4e0d4'; bEl.style.background = '#fff';
+                bWrap.style.display = 'none';
+              } else {
+                bEl.style.border = '2px solid #3d6b3d'; bEl.style.background = '#e8f0e8';
+                eEl.style.border = '1px solid #d4e0d4'; eEl.style.background = '#fff';
+                bWrap.style.display = 'block';
+              }
+            }
+            function showErr(id, show) { document.getElementById(id).style.display = show ? 'block' : 'none'; }
+            function protoSubmit() {
+              const type = document.querySelector('input[name="p-invoice-type"]:checked').value;
+              const email = document.getElementById('p-email').value.trim();
+              let valid = true;
+              if (type === 'company') {
+                const cn = document.getElementById('p-company-name').value.trim();
+                const tx = document.getElementById('p-tax-id').value.trim();
+                if (!cn) { showErr('p-company-name-err', true); valid = false; } else showErr('p-company-name-err', false);
+                if (!/^\d{8}$/.test(tx)) { showErr('p-tax-id-err', true); valid = false; } else showErr('p-tax-id-err', false);
+              }
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('p-email-err', true); valid = false; } else showErr('p-email-err', false);
+              const carrier = document.querySelector('input[name="p-carrier"]:checked');
+              if (type === 'personal' && carrier && carrier.value === 'barcode') {
+                const bc = document.getElementById('p-barcode').value.trim();
+                if (!/^\/[A-Z0-9]{7}$/.test(bc)) { showErr('p-barcode-err', true); valid = false; } else showErr('p-barcode-err', false);
+              }
+              if (!valid) return;
+              const s = document.getElementById('p-success');
+              s.style.display = 'flex';
+              setTimeout(() => { s.style.display = 'none'; }, 3000);
+            }
+            function protoCancel() { alert('取消填寫，發票將維持待補填狀態。'); }
+          
+</script>
+<script>
+function mgmtShowPage() {
+  document.getElementById('mgmt-state-a').style.display = 'none';
+  document.getElementById('mgmt-state-b').style.display = 'block';
+}
+function mgmtTab(tab) {
+  const isForm = tab === 'form';
+  document.getElementById('mgmt-panel-form').style.display = isForm ? 'block' : 'none';
+  document.getElementById('mgmt-panel-list').style.display = isForm ? 'none' : 'block';
+  document.getElementById('mgmt-tab-form').style.color = isForm ? '#2d4a2d' : '#6b7280';
+  document.getElementById('mgmt-tab-form').style.borderBottom = isForm ? '2px solid #2d4a2d' : '2px solid transparent';
+  document.getElementById('mgmt-tab-form').style.fontWeight = isForm ? '600' : '400';
+  document.getElementById('mgmt-tab-list').style.color = isForm ? '#6b7280' : '#2d4a2d';
+  document.getElementById('mgmt-tab-list').style.borderBottom = isForm ? '2px solid transparent' : '2px solid #2d4a2d';
+  document.getElementById('mgmt-tab-list').style.fontWeight = isForm ? '400' : '600';
+}
+function mgmtTypeSelect(type) {
+  const pEl = document.getElementById('m-type-personal');
+  const cEl = document.getElementById('m-type-company');
+  const cSec = document.getElementById('m-company-section');
+  const cs = document.getElementById('m-carrier-section');
+  const cd = document.getElementById('m-carrier-disabled');
+  if (type === 'personal') {
+    pEl.style.border = '2px solid #3d6b3d'; pEl.style.background = '#e8f0e8';
+    cEl.style.border = '1px solid #d4e0d4'; cEl.style.background = '#fff';
+    cSec.style.display = 'none'; cs.style.display = 'block'; cd.style.display = 'none';
+  } else {
+    cEl.style.border = '2px solid #3d6b3d'; cEl.style.background = '#e8f0e8';
+    pEl.style.border = '1px solid #d4e0d4'; pEl.style.background = '#fff';
+    cSec.style.display = 'block'; cs.style.display = 'none'; cd.style.display = 'block';
+  }
+}
+function mgmtCarrier(type) {
+  const eEl = document.getElementById('m-c-email');
+  const bEl = document.getElementById('m-c-barcode');
+  const bw = document.getElementById('m-barcode-wrap');
+  if (type === 'email') {
+    eEl.style.border = '2px solid #3d6b3d'; eEl.style.background = '#e8f0e8';
+    bEl.style.border = '1px solid #d4e0d4'; bEl.style.background = '#fff';
+    bw.style.display = 'none';
+  } else {
+    bEl.style.border = '2px solid #3d6b3d'; bEl.style.background = '#e8f0e8';
+    eEl.style.border = '1px solid #d4e0d4'; eEl.style.background = '#fff';
+    bw.style.display = 'block';
+  }
+}
+function mgmtSave() {
+  const type = document.querySelector('input[name="m-invoice-type"]:checked').value;
+  const email = document.getElementById('m-email').value.trim();
+  let valid = true;
+  if (type === 'company') {
+    const cn = document.getElementById('m-company-name').value.trim();
+    const tx = document.getElementById('m-tax-id').value.trim();
+    document.getElementById('m-cn-err').style.display = !cn ? 'block' : 'none';
+    document.getElementById('m-tax-err').style.display = !/^\d{8}$/.test(tx) ? 'block' : 'none';
+    if (!cn || !/^\d{8}$/.test(tx)) valid = false;
+  }
+  document.getElementById('m-email-err').style.display = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'block' : 'none';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) valid = false;
+  const carrier = document.querySelector('input[name="m-carrier"]:checked');
+  if (type === 'personal' && carrier && carrier.value === 'barcode') {
+    const bc = document.getElementById('m-barcode').value.trim();
+    document.getElementById('m-barcode-err').style.display = !/^\/[A-Z0-9]{7}$/.test(bc) ? 'block' : 'none';
+    if (!/^\/[A-Z0-9]{7}$/.test(bc)) valid = false;
+  }
+  if (!valid) return;
+  document.getElementById('mgmt-banner').style.display = 'none';
+  const s = document.getElementById('m-save-success');
+  s.style.display = 'block';
+  // Update table: flip PENDING rows to ISSUED
+  setTimeout(() => {
+    const rows = document.querySelectorAll('#mgmt-table-body tr');
+    rows.forEach(row => {
+      const badge = row.querySelector('span');
+      if (badge && badge.textContent === '待補填') {
+        badge.textContent = '已開立';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#166534';
+        const cells = row.querySelectorAll('td');
+        cells[3].textContent = 'AB-' + (10000000 + Math.floor(Math.random()*9000000));
+        const today = new Date();
+        cells[4].textContent = today.toISOString().slice(0,10);
+        cells[4].style.color = '#4a5a4a';
+      }
+    });
+    s.textContent = '✓ 所有發票已補開完成，請至「開立紀錄」查看。';
+  }, 1200);
+}
+
+</script>
+<script>
+// ── Spec 01 Registration Prototype JS ──
+
+  var regCurrentType    = 'personal';
+  var regCurrentCarrier = 'email';
+
+  function regSyncEmail() {
+    var src  = document.getElementById('reg-contact-email').value;
+    var dest = document.getElementById('reg-inv-email');
+    dest.value = src;
+  }
+
+  function regSyncCompanyName() {
+    if (regCurrentType === 'company') {
+      var src  = document.getElementById('reg-company-name').value;
+      var dest = document.getElementById('reg-buyer-name');
+      if (!dest._manuallyEdited) dest.value = src;
+    }
+  }
+
+  (function() {
+    var bn = document.getElementById('reg-buyer-name');
+    if (bn) bn.addEventListener('input', function() { bn._manuallyEdited = true; });
+  })();
+
+  function regSwitchType(type) {
+    regCurrentType = type;
+    var pBlock = document.getElementById('reg-personal-block');
+    var cBlock = document.getElementById('reg-company-block');
+    var pBtn   = document.getElementById('reg-type-personal-btn');
+    var cBtn   = document.getElementById('reg-type-company-btn');
+    if (type === 'personal') {
+      pBlock.classList.remove('reg-hidden');
+      cBlock.classList.add('reg-hidden');
+      pBtn.classList.add('active'); cBtn.classList.remove('active');
+    } else {
+      pBlock.classList.add('reg-hidden');
+      cBlock.classList.remove('reg-hidden');
+      cBtn.classList.add('active'); pBtn.classList.remove('active');
+      var comp = document.getElementById('reg-company-name').value;
+      var bn   = document.getElementById('reg-buyer-name');
+      if (comp && !bn._manuallyEdited) bn.value = comp;
+    }
+    regClearAllErrors();
+  }
+
+  function regSwitchCarrier(carrier) {
+    regCurrentCarrier = carrier;
+    var bf   = document.getElementById('reg-barcode-field');
+    var eBtn = document.getElementById('reg-carrier-email-btn');
+    var bBtn = document.getElementById('reg-carrier-barcode-btn');
+    if (carrier === 'barcode') {
+      bf.classList.remove('reg-hidden');
+      bBtn.classList.add('active'); eBtn.classList.remove('active');
+    } else {
+      bf.classList.add('reg-hidden');
+      eBtn.classList.add('active'); bBtn.classList.remove('active');
+      regClearError('reg-barcode', 'reg-barcode-err');
+    }
+  }
+
+  function regCheckDuplicate() {
+    var val = document.getElementById('reg-brand-code').value.trim();
+    var dup = document.getElementById('reg-brand-code-dup');
+    var inp = document.getElementById('reg-brand-code');
+    if (!val) return;
+    var isDup = /1$|test$/i.test(val);
+    if (isDup) { dup.classList.add('visible'); inp.classList.add('reg-error'); }
+    else       { dup.classList.remove('visible'); inp.classList.remove('reg-error'); }
+  }
+
+  function regShowError(fieldId, errId, msg) {
+    var el  = document.getElementById(fieldId);
+    var err = document.getElementById(errId);
+    if (el)  el.classList.add('reg-error');
+    if (err) { if (msg) err.textContent = msg; err.classList.add('visible'); }
+  }
+  function regClearError(fieldId, errId) {
+    var el  = document.getElementById(fieldId);
+    var err = document.getElementById(errId);
+    if (el)  el.classList.remove('reg-error');
+    if (err) err.classList.remove('visible');
+  }
+  function regClearAllErrors() {
+    document.querySelectorAll('.reg-error').forEach(function(el){ el.classList.remove('reg-error'); });
+    document.querySelectorAll('.reg-err-msg.visible').forEach(function(el){ el.classList.remove('visible'); });
+    document.querySelectorAll('.reg-dup-badge.visible').forEach(function(el){ el.classList.remove('visible'); });
+  }
+
+  var regEmailRe   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var regBarcodeRe = /^\/[A-Z0-9]{7}$/;
+  var regTaxIdRe   = /^\d{8}$/;
+
+  function regSubmit() {
+    var ok = true;
+    regClearAllErrors();
+
+    if (!document.getElementById('reg-brand-name').value.trim())
+      { regShowError('reg-brand-name','reg-brand-name-err'); ok=false; }
+    if (!document.getElementById('reg-brand-code').value.trim())
+      { regShowError('reg-brand-code','reg-brand-code-err'); ok=false; }
+    if (!document.getElementById('reg-company-name').value.trim())
+      { regShowError('reg-company-name','reg-company-name-err'); ok=false; }
+    if (!document.getElementById('reg-contact-name').value.trim())
+      { regShowError('reg-contact-name','reg-contact-name-err'); ok=false; }
+
+    var ce = document.getElementById('reg-contact-email').value.trim();
+    if (!ce || !regEmailRe.test(ce))
+      { regShowError('reg-contact-email','reg-contact-email-err'); ok=false; }
+
+    var ie = document.getElementById('reg-inv-email').value.trim();
+    if (!ie || !regEmailRe.test(ie))
+      { regShowError('reg-inv-email','reg-inv-email-err'); ok=false; }
+
+    if (regCurrentType === 'personal') {
+      if (regCurrentCarrier === 'barcode') {
+        var bc = document.getElementById('reg-barcode').value.trim();
+        if (!bc || !regBarcodeRe.test(bc))
+          { regShowError('reg-barcode','reg-barcode-err','格式應為 /XXXXXXX'); ok=false; }
+      }
+    } else {
+      if (!document.getElementById('reg-buyer-name').value.trim())
+        { regShowError('reg-buyer-name','reg-buyer-name-err'); ok=false; }
+      var tid = document.getElementById('reg-tax-id').value.trim();
+      if (!tid || !regTaxIdRe.test(tid))
+        { regShowError('reg-tax-id','reg-tax-id-err'); ok=false; }
+      if (!document.getElementById('reg-buyer-addr').value.trim())
+        { regShowError('reg-buyer-addr','reg-buyer-addr-err'); ok=false; }
+      if (!document.getElementById('reg-buyer-phone').value.trim())
+        { regShowError('reg-buyer-phone','reg-buyer-phone-err'); ok=false; }
+    }
+
+    if (!ok) {
+      var fe = document.querySelector('.reg-error');
+      if (fe) fe.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    var toast = document.getElementById('reg-toast');
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 3000);
+  }
+
+
+</script>
+</body>
+</html>
