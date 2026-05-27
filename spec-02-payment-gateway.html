@@ -723,7 +723,101 @@ a { color: #1a73e8; }
 
 </style>
 </head>
-<body>
+<body><nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="doc-series">LINE OA Plus DX · Phase 2</div>
+    <h2>開發規格文件總覽</h2>
+  </div>
+  <div class="sidebar-nav">
+    <a class="nav-spec-header" href="spec-01-invoice-management.html" style="text-decoration:none;">
+      <span class="nav-spec-badge">01</span>
+      <span class="nav-spec-title">發票管理</span>
+      <span class="nav-spec-arrow">▶</span>
+    </a>
+    <div class="nav-sub" id="nav-01">
+      <a href="spec-01-invoice-management.html#s01-meta">文件概覽</a>
+      <a href="spec-01-invoice-management.html#s01-s1">1. 功能概述</a>
+      <a href="spec-01-invoice-management.html#s01-s2">2. 責任範圍</a>
+      <a href="spec-01-invoice-management.html#s01-s3">3. 發票類型定義</a>
+      <a href="spec-01-invoice-management.html#s01-s4">4. 開票流程</a>
+      <a href="spec-01-invoice-management.html#s01-s5">5. 待開票紀錄結構</a>
+      <a href="spec-01-invoice-management.html#s01-s6">6. 填寫頁面規格</a>
+      <a href="spec-01-invoice-management.html#s01-s6-proto">6.6 Prototype 填寫頁</a>
+      <a href="spec-01-invoice-management.html#s01-s6-mgmt">6.7 Prototype 管理頁</a>
+      <a href="spec-01-invoice-management.html#s01-s6b">6.8 註冊頁發票專區</a>
+      <a href="spec-01-invoice-management.html#s01-s6b-proto">6.8.3 Prototype</a>
+      <a href="spec-01-invoice-management.html#s01-s7">7. Webhook 接收規格</a>
+      <a href="spec-01-invoice-management.html#s01-s8">8. Open API 查詢</a>
+      <a href="spec-01-invoice-management.html#s01-s9">9. Webhook 回應規範</a>
+      <a href="spec-01-invoice-management.html#s01-s10">10. 注意事項</a>
+    </div>
+    <div class="nav-spec-header open active-group" data-target="nav-02" onclick="toggleSub(this)">
+      <span class="nav-spec-badge">02</span>
+      <span class="nav-spec-title">藍新金流整合</span>
+      <span class="nav-spec-arrow">▶</span>
+    </div>
+    <div class="nav-sub open" id="nav-02">
+      <a href="#s02-overview">1. 功能概述</a>
+      <a href="#s02-scope">2. 責任範圍劃分</a>
+      <a href="#s02-prerequisites">3. 前置條件</a>
+      <a href="#s02-flow">4. 付款流程架構</a>
+      <a href="#s02-trial">5. Trial 訂閱差異</a>
+      <a href="#s02-autorenew">6. 自動續扣機制</a>
+      <a href="#s02-grace">7. 扣款失敗與寬限期</a>
+      <a href="#s02-payment-update">8. 付款方式更新</a>
+      <a href="#s02-impl">9. 12CM 需實作項目</a>
+      <a href="#s02-webhook-retry">10. Webhook 重試規範</a>
+      <a href="#s02-endpoint">11. API 端點</a>
+      <a href="#s02-notes">12. 注意事項</a>
+    </div>
+    <a class="nav-spec-header" href="spec-03-premium-activation.html" style="text-decoration:none;">
+      <span class="nav-spec-badge">03</span>
+      <span class="nav-spec-title">付款訂閱啟用進階版</span>
+      <span class="nav-spec-arrow">▶</span>
+    </a>
+    <div class="nav-sub" id="nav-03">
+      <a href="spec-03-premium-activation.html#s03-overview">1. 功能概述</a>
+      <a href="spec-03-premium-activation.html#s03-lifecycle">2. 商戶訂閱生命週期</a>
+      <a href="spec-03-premium-activation.html#s03-state-model">3. 訂閱狀態模型</a>
+      <a href="spec-03-premium-activation.html#s03-webhook">4. Webhook 事件處理</a>
+      <a href="spec-03-premium-activation.html#s03-api">5. Open API 查詢</a>
+      <a href="spec-03-premium-activation.html#s03-access-control">6. 權益控管邏輯</a>
+      <a href="spec-03-premium-activation.html#s03-activation-check">7. 啟用成功判斷</a>
+      <a href="spec-03-premium-activation.html#s03-grace-note">7.1 寬限期說明</a>
+      <a href="spec-03-premium-activation.html#s03-idempotency">8. Idempotency 處理</a>
+      <a href="spec-03-premium-activation.html#s03-error-handling">9. 錯誤處理</a>
+      <a href="spec-03-premium-activation.html#s03-dev-test">10. 開發與測試</a>
+    </div>
+    <a class="nav-spec-header" href="spec-04-frontend-sdk-roles.html" style="text-decoration:none;">
+      <span class="nav-spec-badge">04</span>
+      <span class="nav-spec-title">前端 SDK 與角色權限</span>
+      <span class="nav-spec-arrow">▶</span>
+    </a>
+    <div class="nav-sub" id="nav-04">
+      <a href="spec-04-frontend-sdk-roles.html#s04-overview">1. 功能概述</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-roles">2. 角色控管</a>
+      <a style="opacity:0.5;font-size:11px;padding:4px 16px 2px;cursor:default;">── SDK 串接參考 ──</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-sdk-load">3. SDK 載入</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-api-overview">4. API 一覽</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-getUser">5. getUser()</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-getPluginInfo">6. getPluginInfo()</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-csrf">7. CSRF 安全機制</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-jwt">8. DX-JWT 驗證</a>
+      <a style="opacity:0.5;font-size:11px;padding:4px 16px 2px;cursor:default;">── 環境限制參考 ──</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-routing">9. API 請求路由</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-uiux">10. UI/UX 實作要點</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-sandbox">11. iFrame 沙盒限制</a>
+      <a href="spec-04-frontend-sdk-roles.html#s04-csp">12. CSP 合規要求</a>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    LINE OA Plus TW DX Solution<br>
+    技術文件 v2.0.0 · Product Guide<br>
+    Phase 2 · 2026-05-21
+  </div>
+</nav>
+<main id="main">
+
 <!-- ── Spec 02 Panel ── -->
   <div style="display:block;" id="panel-02">
     <header class="doc-header">
@@ -1248,5 +1342,18 @@ function downloadMD(num) {
 
 </script>
 
+
+</main>
+
+<script>
+function toggleSub(header) {
+  const target = header.dataset.target;
+  if (!target) return;
+  const sub = document.getElementById(target);
+  if (!sub) return;
+  header.classList.toggle('open');
+  sub.classList.toggle('open');
+}
+</script>
 </body>
 </html>
